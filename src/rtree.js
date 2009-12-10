@@ -595,16 +595,6 @@ var RTree = function(width){
 		}
 	};
 		
-	/* non-recursive function counts number of nodes hit
-	 * [ number ] = RTree.count(rectangle)
-	 */
-	this.count = function(rect) {
-		if(arguments.length < 1)
-			throw "Wrong number of arguments. RT.count requires at least a bounding rectangle."
-
-		return(this.search.apply(this, arguments).length);
-	};
-	
 	/* non-recursive insert function
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
