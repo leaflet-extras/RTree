@@ -1,0 +1,146 @@
+<html>
+	
+<script type='text/javascript' src='../libs/firebug-lite-compressed.js'></script>
+<script type='text/javascript' src="../libs/excanvas.compiled.js"></script>
+<script type='text/javascript' src="../src/rtree.js"></script>
+<script type='text/javascript'>
+var temp_tree = new RTree();
+function getMousePos(e)
+{
+	var posx = 0;
+	var posy = 0;
+	if (!e) var e = window.event;
+	if (e.pageX || e.pageY) 	{
+		posx = e.pageX;
+		posy = e.pageY;
+	}
+	else if (e.clientX || e.clientY) 	{
+		posx = e.clientX + document.body.scrollLeft
+			+ document.documentElement.scrollLeft;
+		posy = e.clientY + document.body.scrollTop
+			+ document.documentElement.scrollTop;
+	}
+	// posx and posy contain the mouse position relative to the document
+	// Do something with this information
+	var tcanvas = document.getElementById("tree_canvas");
+	posx = posx - tcanvas.offsetLeft; posy = posy - tcanvas.offsetTop;
+	return([posx*10,posy*10]);
+	
+}
+function dodown(e)
+{
+	
+}
+
+function doclick(e)
+{
+	pos = getMousePos(e);
+	console.time("Deleting a portion of "+yy+" objects within a 100x100 pixel window");
+	var t = temp_tree.remove({x:pos[0]-500,y:pos[1]-500,w:1000,h:1000});
+	console.timeEnd("Deleting a portion of "+yy+" objects within a 100x100 pixel window");
+	console.log("Deleted "+t.length+" objects!");
+	draw();
+}
+
+var redraw_timer = null;
+var yy=0;
+var yy_target=6500;
+
+/**
+ * A doload.
+ * @constructor
+ */
+doload = function()
+{
+	var tcanvas = document.getElementById("tree_canvas");
+	if(tcanvas.addEventListener)
+		tcanvas.addEventListener("click", doclick, false);
+	
+	console.time("Adding "+yy_target+" non-overlapping objects to the R-Tree");
+	build();
+}
+var tries = 0;
+
+build = function(){
+ 	tries = 0;
+	while(yy<yy_target)
+	{
+		build_step();
+		if(tries >= 500)
+		{
+		//	console.time("Drawing 20k objects from the R-Tree");
+	//		draw();
+	//		console.timeEnd("Drawing 20k objects from the R-Tree");
+			setTimeout(build, 1); // For no script timeout
+			return;
+		}
+	}
+	console.timeEnd("Adding "+yy_target+" non-overlapping objects to the R-Tree");
+	draw();
+}
+
+build_step = function()
+{
+	var bounds = {x:(Math.random()*12000+200), y:(Math.random()*8800+100), w:(Math.random()*50+1), h:(Math.random()*50+1)};
+	if(/*temp_tree.count(bounds)*/0 == 0)
+	{
+		temp_tree.insert(bounds, {id:"test_object_"+yy, color:"white"});
+		yy+=1;
+	}
+	tries += 1;
+}
+
+function draw_nodes(context)
+{
+	var hit_stack = []; // Contains the local elements (at current tree depth) that overlap
+	var drawn = 0;
+	var leaf_stack = [];
+	hit_stack.push(temp_tree.get_tree().nodes);
+	context.strokeRect(temp_tree.get_tree().x/10, temp_tree.get_tree().y/10, temp_tree.get_tree().w/10, temp_tree.get_tree().h/10);
+	context.strokeStyle = "rgba(155,50,50,0.1)";
+	context.fillStyle = "rgba(225,155,155,0.01)";
+	do
+	{	
+		var nodes = hit_stack.pop();
+
+		for(var i = nodes.length-1; i >= 0; i--)
+		{
+			var ltree = nodes[i];
+	  	if("nodes" in ltree) // Not a Leaf
+	  	{
+				context.strokeRect(ltree.x/10, ltree.y/10, ltree.w/10, ltree.h/10);
+				context.fillRect(ltree.x/10, ltree.y/10, ltree.w/10, ltree.h/10);
+	  		hit_stack.push(ltree.nodes);
+	  	}else
+	  		leaf_stack.push(ltree);
+		}
+	}while(hit_stack.length > 0);
+	context.fillStyle = "rgba(20,20,20,0.8)";
+	do
+	{	
+		var leaf = leaf_stack.pop();
+ 		drawn++;
+		context.fillRect(leaf.x/10, leaf.y/10, leaf.w/10, leaf.h/10);
+	}while(leaf_stack.length > 0);
+	return drawn;
+}
+
+function draw(){
+	var tcanvas = document.getElementById("tree_canvas");
+	var ctx = tcanvas.getContext("2d");
+	ctx.clearRect(0, 0, tcanvas.width, tcanvas.height)
+	ctx.fillStyle = "rgb(0,0,0)";
+
+	
+	ctx.strokeStyle = "rgb(0,150,0)";
+	var drawn = draw_nodes(ctx);
+
+	ctx.clearRect(0, 0, 160, 15);
+	if("fillText" in ctx) ctx.fillText("Current # of Elements: " + drawn, 	10, 10);
+}
+</script>
+<body onload="doload()">
+	This test generates 6500 small and non-overlapping rectangles. Each left mouse click searches a 100x100 pixel window deleting any elements it funds. The time taken is reported in the firebug-lite console.<br/>
+	<canvas id="tree_canvas" width="1250" height="900" style="border:1px solid #000;">
+	</canvas>
+</body>

@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<title>JSSpec results</title>
+<link rel="stylesheet" type="text/css" href="../jsspec/JSSpec.css" />
+<script type="text/javascript" src="../jsspec/diff_match_patch.js"></script>
+<script type="text/javascript" src="../jsspec/JSSpec.js"></script>
+<script type="text/javascript" src="../src/rtree.js"></script>
+<script type="text/javascript">// <![CDATA[
+var rt = new RTree();
+describe('RTree Creation', {
+    'Insert 1k Objects': function() {
+    		var i = 1000;
+				while(i > 0) {
+					var bounds = {x:(Math.random()*10000), y:(Math.random()*10000), w:(Math.random()*500), h:(Math.random()*500)};
+					rt.insert(bounds, "JUST A TEST OBJECT!_"+i);
+					i--;
+				}
+        value_of(rt.count({x:0,y:0,w:10600,h:10600})).should_be(1000);
+    },
+    'Insert 1k More Objects': function() {
+    		var i = 1000;
+				while(i > 0) {
+					var bounds = {x:(Math.random()*10000), y:(Math.random()*10000), w:(Math.random()*500), h:(Math.random()*500)};
+					rt.insert(bounds, "JUST A TEST OBJECT!_"+i);
+					i--;
+				}
+        value_of(rt.count({x:0,y:0,w:10600,h:10600})).should_be(2000);
+    }
+})
+describe('RTree Searching', {
+    '1k Out-of-Bounds Counts': function() {
+    		var i = 1000;
+    		var len = 0;
+				while(i > 0) {
+					var bounds = {x:-(Math.random()*10000+501), y:-(Math.random()*10000+501), w:(Math.random()*500), h:(Math.random()*500)};
+					len += rt.count(bounds);
+					i--;
+				}
+        value_of(len).should_be(0);
+    },
+    '1k In-Bounds Searches': function() {
+    		var i = 1000;
+    		var len = 0;
+				while(i > 0) {
+					var bounds = {x:(Math.random()*10000), y:(Math.random()*10000), w:(Math.random()*500), h:(Math.random()*500)};
+					len += rt.search(bounds).length;
+					i--;
+				}
+        value_of(len).should_not_be(0);
+    }
+})
+var g_len = 0;
+describe('RTree Deletion', {
+    'Delete Half the RTree': function() {
+				var bounds = {x:5000, y:0, w:5500, h:10500};
+				g_len += rt.remove(bounds).length;
+        value_of(g_len).should_not_be(0);
+    },
+    'Delete the Other Half of the RTree': function() {
+				var bounds = {x:0, y:0, w:5000, h:10500};
+				g_len += rt.remove(bounds).length;
+        value_of(g_len).should_be(2000);
+    }
+})
+// ]]></script>
+</head>
+<body></body>
+</html>

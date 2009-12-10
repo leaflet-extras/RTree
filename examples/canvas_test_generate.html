@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>More Canvas Fun</title>
+<script type='text/javascript' src='../libs/firebug-lite-compressed.js'></script>
+<script type='text/javascript' src="../libs/jquery.min.js"></script>
+<script type='text/javascript' src="../src/rtree.js"></script>
+</head>
+<body>
+	This test generate 20k squares over a an area several times larger than the canvas window. Once insertion has completely, the canvas begins scrolling diagonally. This test shows canvas rendering and event handling of a small subset (<300 objects) of a much larger dataset (20k objects) at interactive rates.<br/>
+	<canvas id="game" width="650px" height="500px">
+	</canvas>
+	<script type="text/javascript">
+		
+		/* I want to be able to do:
+		 *  cQuery:
+		 *   addObject(object_interface)
+		 *   
+		 *
+		 *  cQuery(Rectangle | CanvasObject) [decorated array]
+		 *
+		 * object interface:
+		 *   attachEvent(event_name,function())
+		 *   removeEvent(event_name)
+		 *   doAreaEvent(event_name)
+		 *   
+		 */
+/********************************************
+ *    Full Canvas Library					*
+ ********************************************/
+ 
+var canvwrap=(function(){
+
+	var canv=null,
+		canvctx=null,
+		rt=new RTree(),
+		layers={'main':0},
+		mouse={track:false,x:0,y:0},
+		mouseouts=[],
+		mouseoutids=0;
+		
+	var canvasElement=function(x,y,w,h){
+		this.x=x;
+		this.y=y;
+		this.w=w;
+		this.h=h;
+	}
+	
+	canvasElement.prototype.attachEvent=function(action,func,layer){
+		canvwrap.attachEvent({x:this.x,y:this.y,w:this.w,h:this.h},action,func,layer);
+	}
+	
+	canvasElement.prototype.toString=function(){ return '[CanvasElement]'; };
+		
+	function addIndex(bounds,id,action,func,layer, opts)
+	{
+		if(!func) return;
+		if(!layer) layer='main'; 
+			
+		// Get all overlapping objects from the tree
+		var local_objs = treeSearch(bounds.x,bounds.y,bounds.w,bounds.h);
+		var new_obj = true;
+
+		// Look for an existing object with our same ID
+		while(local_objs.length > 0)
+		{
+			obj = local_objs.pop();
+			if(obj.id == id)
+			{
+				new_obj = false;
+				break;
+			}
+		}
+		// If no object was found, make a new one...
+		if(new_obj) obj = {"func":{}, "action":{}, "id":id};
+		
+		// If no events have been attached to the canvas, attach them..
+		if((action=='mouseover' || action=='mouseout' || action=='mousemove') && !mouse.track)
+		{
+			mouse.track=true;
+			canv.addEvent('mousemove',__mouseMove);
+		}
+		
+		for (var k in opts)
+			obj[k] = opts[k];
+
+					
+		// Update our obj's properties
+		obj.func[action] = func;
+		obj.action[action] = true;
+		obj.layer = layers[layer];
+		if(new_obj) rt.insert(bounds,obj);
+	}
+
+	function treeSearch(x,y,w,h)
+	{
+		var results=rt.search({x:x,y:y,w:w,h:h});
+		if(results.length==0)
+			return [];
+		results.sort(sortRes);
+		return results;
+	}
+	
+	function sortRes(a,b){ return b.layer-a.layer; }
+		
+	function __mouseDown(e){
+		var xy=getXY(e);		
+		xy.x = canv_off_x+xy.x/zoom;
+		xy.y = canv_off_y+xy.y/zoom;
+
+		var results=treeSearch(xy.x,xy.y,1,1);
+		for(var i=0;i<results.length;i++)
+			if(results[i].action[e.type])
+				results[i].func[e.type].apply(results[i], [{x:xy.x,y:xy.y}]);
+	}
+	
+
+	function __drawImage(image, dx, dy)
+	{
+		if(arguments[8])
+		{
+			sx=dx;
+			sy=dy;
+			sw=arguments[3];
+			sh=arguments[4];
+			dx=arguments[5];
+			dy=arguments[6];
+			dw=arguments[7];
+			dh=arguments[8];
+			canvctx.drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh);
+			return new canvasElement(dx,dy,dw,dh);
+		}
+
+		if(arguments[3] && arguments[4])
+		{
+			dw=arguments[3];
+			dh=arguments[4];
+		}
+		else
+		{
+			dw=image.width;
+			dh=image.height;
+		}
+		canvctx.drawImage(image,dx,dy,dw,dh);
+		return new canvasElement(dx,dy,dw,dh);
+	}
+
+	function getXY(e)
+	{
+		var posx = 0;
+		var posy = 0;
+		if (!e) var e = window.event;
+		if (e.pageX || e.pageY) {
+			posx = e.pageX;
+			posy = e.pageY;
+		}
+		else if (e.clientX || e.clientY) {
+			posx = e.clientX + document.body.scrollLeft
+				+ document.documentElement.scrollLeft;
+			posy = e.clientY + document.body.scrollTop
+				+ document.documentElement.scrollTop;
+		}
+		posx=posx-canv.offsetLeft;
+		posy=posy-canv.offsetTop;
+		return {x:posx,y:posy};
+	}
+	
+	function __mouseMove(e){
+		var xy=getXY(e);
+		xy.x = canv_off_x+xy.x/zoom;
+		xy.y = canv_off_y+xy.y/zoom;
+		
+		var results=treeSearch(xy.x,xy.y,1,1),
+			thrown=null,
+			entryfound=false;
+		var results_copy = results.slice(0, results.length);
+		var l_mouse_ins = []; // Holds new (mousein) elements
+		var l_mouse_moves = []; // holds all repeated  elements
+		// mouseouts will hold mouseouts
+		mouse.x=xy.x;
+		mouse.y=xy.y;
+		
+		// Seperate the elements from mouseouts + results into three arrays (in, out, move)
+		while(results.length > 0)
+		{
+			var current_results = results.pop();
+
+			var m=0;
+			while(m<mouseouts.length)
+			{
+				if(mouseouts[m].id === current_results) //IF it was found in "results" then it is a move
+				{
+					l_mouse_moves.push(mouseouts.splice(m));
+					m-=1;
+					current_results = null;
+				}
+				m+=1;
+			}
+			if(current_results) //IF it wasn't found in "results" then it is new
+				l_mouse_ins.push(current_results);
+		}
+		
+		// now the three arrays contain the elements they should..
+		while(mouseouts.length>0)
+		{
+				var thrown=mouseouts.pop();
+				if(thrown.action['mouseout'])
+					thrown.func['mouseout']({x:xy.x,y:xy.y});
+		}
+		while(l_mouse_ins.length>0)
+		{
+				var thrown=l_mouse_ins.pop();
+				if(thrown.action['mouseover'])
+					thrown.func['mouseover']({x:xy.x,y:xy.y});
+		}
+		while(l_mouse_moves.length>0)
+		{
+				var thrown=l_mouse_moves.pop();
+				if(thrown.action['mousemove'])
+					thrown.func['mousemove']({x:xy.x,y:xy.y});
+		}
+		mouseouts = results_copy;
+	}
+
+	function init(canvid, width, height)
+	{
+		canv=document.getElementById(canvid);
+		canv.addEvent=function(type,func){
+			if(canv.addEventListener)
+				canv.addEventListener(type,func,false);
+			else if(canv.attachEvent)
+				canv.attachEvent(type,func);
+		};
+		
+		canv.addEvent('mousedown',__mouseDown);
+		canv.addEvent('mouseup',__mouseDown);
+		canv.addEvent('click',__mouseDown);
+		canv.addEvent('dblclick',__mouseDown);
+		
+		if(canv.getContext)
+			canvctx=canv.getContext('2d');
+	}
+
+	return {
+		init: init,
+		attachEvent: addIndex,
+		drawImage: __drawImage,
+		getTree: function(){return(rt);}
+	}
+
+})();
+
+canvwrap.init("game", 650, 475);
+
+var ctx=document.getElementById('game');
+ctx = ctx.getContext('2d');
+
+function test(dir){
+	//alert(dir);
+	var dirarr=['top_left', 'top', 'top_right', 'right', 'bottom_right', 'bottom', 'bottom_left', 'left'];
+	document.getElementById('status').innerHTML=dirarr[dir] + " was clicked!";
+}
+
+var canv_off_x = 1237;
+var canv_del_x = 0;
+var canv_off_y = 931;
+var canv_del_y = 0;
+var zoom = 1;
+var zdel = 0.99; // speed of zoom
+zdel = 1.0;
+
+var border_width = 4.0;
+
+var fps_timer = false;
+
+function draw_nodes(context)
+{
+	var hit_stack = []; // Contains the local elements (at current tree depth) that overlap
+	var temp_tree = canvwrap.getTree().get_tree();
+
+	context.strokeStyle = "rgb(0,0,0)";
+	context.lineWidth = border_width*zoom;
+
+//	hit_stack.push(temp_tree.nodes);
+//	context.strokeRect(temp_tree.x, temp_tree.y, temp_tree.w, temp_tree.h);
+	
+	var elements = canvwrap.getTree().search({x:canv_off_x,y:canv_off_y,w:context.canvas.width/zoom,h:context.canvas.height/zoom}, true);
+	var to_draw = elements.length;
+if(window["console"] && console.time && fps_timer)
+		console.time("Draw Frame...");
+	while(elements.length >0)
+	{
+		var el = elements.pop();
+		context.strokeRect((el.x-canv_off_x)*zoom, (el.y-canv_off_y)*zoom, el.w*zoom, el.h*zoom);
+		context.fillStyle=el.leaf.color;
+		context.fillRect((el.x-canv_off_x)*zoom, (el.y-canv_off_y)*zoom, el.w*zoom, el.h*zoom);
+		//context.fillText(el.node.id+"", 	(el.x-canv_off_x+1)*zoom, (el.y-canv_off_y)*zoom);
+	}
+	if(window["console"] && console.timeEnd && fps_timer && !(fps_timer = false))
+		console.timeEnd("Draw Frame...");
+	return(to_draw);
+}
+
+function draw(){
+	var tcanvas = document.getElementById("game");
+	var ctx = tcanvas.getContext("2d");
+
+//	ctx.fillStyle="rgba(255,255,255,0.3)";
+//	ctx.fillRect(0, 0, tcanvas.width, tcanvas.height);
+	ctx.clearRect(0, 0, tcanvas.width, tcanvas.height)
+
+	var drawn = draw_nodes(ctx);
+	ctx.clearRect(0, 0, 160, 40);
+	ctx.fillStyle="rgb(0,0,0)";
+	ctx.fillText("# of Elements on Screen: " + drawn, 	10, 10);
+	ctx.fillText("# of Elements in Tree: " + test_damnit, 10, 20);
+	ctx.fillText("-= " + col_name +" =-", 10, 30);
+}
+
+q=0;
+var test_damnit = 0;
+
+switch(parseInt((Math.random()*7.99)))
+{
+	case 0:
+		col_name="Primarily Mellow";
+		cols =['#B01E1E','#174385','#15592F','#FCDC0A','#000000'];border_width = 3.0;
+		break;
+	case 1:
+		col_name="A Sad Memory";
+		cols =['#1C465C','#597B6B','#D5C263','#E8DF97','#2D88A5'];border_width = 5.0;
+		break;
+	case 2:
+		col_name="Patriot Games";
+		cols =['#ffffff','#353842','#5E6669','#BED1AE','#5E6669','#DEEFBB','#5E6669','#BED1AE','#5E6669','#DEEFBB','#C7493B'];border_width = 3.0;
+		break;
+	case 3:
+		col_name="Weakerthans";
+		cols =['#ffffff', '#292929','#292929','#E2E2E2','#E2E2E2','#E2E2E2','#1A4685','#E80101','#FFBF15'];border_width = 1.0;
+		break;
+	case 4:
+		col_name="Stoicism";
+		cols =['#303030','#303030','#303030','#303030','#303030','#303030','#303030','#303030','#F5EDDF','#F5EDDF','#F5EDDF','#F5EDDF','#F5EDDF','#EDE592','#EDE592','#BFC7C7','#BFC7C7','#D84818']; border_width = 1.0;
+		break;
+	case 5:
+		col_name="Fish bowl";
+		cols =['#BDCCDF', '#BDD1DE', '#BDDEDE', '#BDDED7', '#FC8B4A'];border_width = 1.0;
+		break;
+	case 6:
+		col_name="Bull in a China Shop";
+		cols =['#FDECB1','#F7E5B5','#3A271F','#C51616','#EDDBB4'];border_width = 3.0;
+		break;
+	case 7:
+		col_name="A Funk Odyssey";
+		cols =['#7A6C5D','#7A6C5D','#7A6C5D','#7A6C5D','#7A6C5D','#7A6C5D','#F0B603','#F0B603','#F0B603','#F0B603','#F0B603','#98AAAC','#98AAAC','#98AAAC','#A3033D','#A3033D','#E9FABE'];border_width = 3.0;
+		break;
+}
+
+// LOAD PRE-BUILT TREE
+// canvwrap.getTree().set_tree(OBJ_TREE_20K);
+
+if( canvwrap.getTree().get_tree().nodes.length == 0 )
+{
+	var scale_fact = 1.0;
+	
+	var new_func = function(e){alert("You hit object number '" + this.id + "' and the fill color is '"+ this.color);};
+	var do_some_then_yield = function(){
+		var loops = 0;
+		var made = 0;
+		var bounds = {x:(Math.random()*6000+20), y:(Math.random()*4000+7), w:(Math.random()*(100/scale_fact)+1), h:(Math.random()*(100/scale_fact)+1)};
+		var opts = {color:cols[(Math.random()*100).toFixed()%5]};
+		while(test_damnit < 20000)
+		{
+			if(canvwrap.getTree().count({x:bounds.x-border_width-(25/scale_fact), y:bounds.y-border_width-(25/scale_fact), w:bounds.w+border_width*2+(50/scale_fact), h:bounds.h+border_width*2+(50/scale_fact)}) == 0)
+			{
+				canvwrap.attachEvent(bounds,test_damnit,'mousedown', new_func, null, opts);
+				test_damnit++;
+				bounds = {x:(Math.random()*6000+20), y:(Math.random()*4000+7), w:(Math.random()*(100/scale_fact)+1), h:(Math.random()*(100/scale_fact)+1)};
+				var opts = {color:cols[(Math.random()*123).toFixed()%cols.length]};
+				made++;
+			}
+			else
+			{
+				bounds.x=(Math.random()*6000+20);	bounds.y=(Math.random()*4000+7); bounds.w=(Math.random()*(100/scale_fact)+1); bounds.h=(Math.random()*(100/scale_fact)+1);		
+			}
+			loops++;
+			if(loops >= 500)
+			{
+				if(loops/made > 5)
+					scale_fact *= 2;
+				setTimeout(do_some_then_yield, 0);
+				return;
+			}
+		}
+		canv_del_x = canv_del_y = -2;
+	};
+	do_some_then_yield();
+}
+//canv_del_x = canv_del_y = -2;
+setInterval(function(){ if(zoom > 2 || zoom < 0.4) zdel = 1.0 / zdel; if(canv_off_x > 5400 || canv_off_x < 0) canv_del_x*=-1; if(canv_off_y > 3600 || canv_off_y < 0) canv_del_y*=-1; zoom *= zdel; canv_off_x += (canv_del_x/zoom); canv_off_y += (canv_del_y/zoom); draw();}, 30); // Yield to browser temporarily to suppress "script is taking too damn long!" alert
+
+//ctx.drawImage(document.getElementById('test'), 0, 0, 50, 50, 200, 200, 50, 50);  // not possible without an intermediary
+
+
+
+var UI=(function(){
+
+	var arrows=[
+		[img=new Image(10,10),'top_left',2,2,10,10,0],
+		[img=new Image(10,10),'top',14,2,10,10,1],
+		[img=new Image(10,10),'top_right',26,2,10,10,2],
+		[img=new Image(10,10),'right',26,14,10,10,3],
+		[img=new Image(10,10),'bottom_right',26,26,10,10,4],
+		[img=new Image(10,10),'bottom',14,26,10,10,5],
+		[img=new Image(10,10),'bottom_left',2,26,10,10,6],
+		[img=new Image(10,10),'left',2,14,10,10,7]];
+
+	function loadUI(){
+		// arrows for the top are so far implemented
+		var	imagessrc="/files/images/game_ui/arrows_new/",
+			imgext="gif";
+	
+		for(var i=0;i<arrows.length;i++)
+		{
+			arrows[i][0].src=imagessrc+arrows[i][1]+"."+imgext;
+			arrows[i][0].onload=function(im){return function(){im.loaded=true; loadProgress();}}(arrows[i]);
+		}
+	}
+	
+	function loadProgress(){
+		if(!this.loaded)
+			this.loaded=0;
+		this.loaded++;
+			
+		if(this.loaded==7)
+			drawArrows();
+	}
+
+	function drawArrows(){
+		/*index=index||-1;
+		if(index>=0)
+			if(arrows[index].loaded){
+				ctx.drawImage(arrows[index][0], arrows[index][2], arrows[index][3]);
+				attEvent.add(function(i){return function(){test(arrows[i][6]);}}(index),arrows[index][2],arrows[index][3],arrows[index][4],arrows[index][5],'ui');
+			}
+			else
+				setTimeout(function(){ drawArrows(arrows,i); }, 45);
+		else
+			*/for(var i=0;i<arrows.length;i++)
+			{
+				//if(arrows[i].loaded){
+					x=arrows[i][2];
+					y=arrows[i][3];
+					w=arrows[i][4];
+					h=arrows[i][5];
+					canvwrap.drawImage(arrows[i][0], x, y, w, h).attachEvent('mousedown',function(i){
+						return function(){
+							test(arrows[i][6]);
+						}
+					}(i));
+					
+				/*}
+				//else
+				//{
+					setTimeout(function(i){return function(){drawArrows(arrows,i);}}(i), 45);
+					break;
+				*/}
+	}
+	
+	return {
+		load: loadUI
+	};
+
+})();
+
+//UI.load();
+
+</script>
+</body>
+</html>

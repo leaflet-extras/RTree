@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Slowdowns.. bleh</title>
+</head>
+<body>
+	<canvas style="margin-top: 100px;" id="game" width="650px" height="475px">
+	</canvas>
+	<script type="text/javascript" src="../src/rtree.js"></script>
+	<script type="text/javascript">
+CanvasWrapper=function(canvasid,width,height){
+
+	var canv=null,
+		canvctx=null,
+		rt=new RTree(),
+		layers={'main':0},
+		mouse={track:false,x:0,y:0},
+		old_results = []; // Holds old mousing elements (for _mouseMove)
+		
+	canv=document.getElementById(canvasid);
+	canv["x"] = 0; canv["y"] = 0;
+	canv["w"] = canv.width;	canv["h"] = canv.height;
+	
+	canv.addEvent=function(type,func){
+		if(window.addEventListener)
+			window.addEventListener(type,func,false);
+		else if(window.attachEvent)
+			window.attachEvent(type,func);
+	};
+	
+	canv.addEvent('mousedown',__mouseDown);
+	canv.addEvent('mouseup',__mouseDown);
+	canv.addEvent('click',__mouseDown);
+	canv.addEvent('dblclick',__mouseDown);
+	
+	if(canv.getContext)
+		canvctx=canv.getContext('2d');
+		
+	// This needs to be created into a public function for AddObject, not events
+	this.insertIndex=function(bounds,id,action,func,layer)
+	{
+		if(!func) return;
+		if(!layer) layer='main';
+		
+		// Get all overlapping objects from the tree
+		var local_objs = treeSearch(bounds);
+		var new_obj = true;
+
+		// Look for an existing object with our same ID
+		while(local_objs.length > 0)
+		{
+			obj = local_objs.pop();
+			if(obj.id == id)
+			{
+				new_obj = false;
+				break;
+			}
+		}
+		// If no object was found, make a new one...
+		if(new_obj) obj = {"func":{}, "action":{}, "bounds":{}, "id":id};
+		
+		// If no events have been attached to the canvas, attach them..
+		if((action=='mouseover' || action=='mouseout' || action=='mousemove') && !mouse.track)
+		{
+			mouse.track=true;
+			canv.addEvent('mousemove',__mouseMove);
+		}
+
+		// Update our obj's properties
+		obj.func[action] = func;
+		obj.bounds[action] = bounds;
+		obj.action[action] = true;
+		obj.layer = layers[layer];
+		if(new_obj) rt.insert(bounds,obj);
+	}
+
+	function treeSearch(rect)
+	{
+		var results=rt.search(rect);
+		if(results.length==0)
+			return [];
+		results.sort(sortRes);
+		return results;
+	}
+	
+	function sortRes(a,b){ return b.layer-a.layer; }
+		
+	function __mouseDown(e){
+		var xy=getXY(e),
+			results=treeSearch(xy);
+		for(var i=0;i<results.length;i++)
+			if(results[i].action[e.type])
+				results[i].func[e.type].apply(results[i], [xy.x,xy.y]);
+	}
+
+	// SET_NOT returns an array containing all elements in A that are NOT IN B
+	function SET_NOT(A, B) {
+		var a_len = A.length, b_len = B.length;
+		var ret_array = [], a_found_in_b = false;
+		for(var ai = 0; ai < a_len; ai++)	{
+			for(var bi = 0; bi < b_len; bi++)	{
+				if(A[ai] === B[bi])
+					a_found_in_b = true;
+			}
+			if(!a_found_in_b)
+				ret_array.push(A[ai]);
+			a_found_in_b = false;
+		}
+		return(ret_array);
+	}
+	
+	function __mouseMove(e) {
+		var xy=getXY(e);
+
+		// everything in l_results is a mouseMOVE
+		var l_results=RTree.Rectangle.overlap_rectangle(xy, canv)?treeSearch(xy):[];
+
+		// whatever is in l_results but NOT in old_results is a mouseOVER
+		var l_mouse_ins = SET_NOT(l_results, old_results);
+
+		// whatever is in old_results but NOT in l_results is a mouseOUT
+		var l_mouse_outs = SET_NOT(old_results, l_results);
+
+		while(l_mouse_outs.length>0) {
+				var thrown=l_mouse_outs.pop();
+				if(thrown.action['mouseout'])
+					thrown.func['mouseout'].apply(thrown, [thrown.bounds['mouseout'].x,thrown.bounds['mouseout'].y]);
+		}
+		while(l_mouse_ins.length>0)	{
+				var thrown=l_mouse_ins.pop();
+				if(thrown.action['mouseover'])
+					thrown.func['mouseover'].apply(thrown, [thrown.bounds['mouseover'].x,thrown.bounds['mouseover'].y]);
+		}
+		old_results = l_results.splice(0, l_results.length);
+		while(l_results.length>0)	{
+				var thrown=results.pop();
+				if(thrown.action['mousemove'])
+					thrown.func['mousemove'].apply(thrown, [thrown.bounds['mousemove'].x,thrown.bounds['mousemove'].y]);
+		}
+	}
+	
+	function getXY(e) {
+		var posx = 0;
+		var posy = 0;
+		if (!e) var e = window.event;
+		if (e.pageX || e.pageY) {
+			posx = e.pageX;
+			posy = e.pageY;
+		}
+		else if (e.clientX || e.clientY) {
+			posx = e.clientX + document.body.scrollLeft
+				+ document.documentElement.scrollLeft;
+			posy = e.clientY + document.body.scrollTop
+				+ document.documentElement.scrollTop;
+		}
+		posx=posx-canv.offsetLeft;
+		posy=posy-canv.offsetTop;
+		return {x:posx,y:posy, w:1, h:1};
+	}
+}
+
+
+var ctx=document.getElementById('game').getContext('2d');
+
+var test=new CanvasWrapper("game",650,475);
+
+var cols=['red','blue','green','orange','yellow','silver'];
+var x=0,y=0,w=10,h=10;
+for(var i=0;i<8000;i++)
+{
+	x=rnd(5,600);
+	y=rnd(5,450);
+	test.insertIndex({x:x,y:y,w:w,h:h},"box"+i,'mouseover',highlight);
+	test.insertIndex({x:x,y:y,w:w,h:h},"box"+i,'mouseout',function(b,c){setTimeout(function(){ctx.fillStyle="grey";ctx.fillRect(b,c,w,h);},500)});
+	ctx.fillStyle="grey";
+	ctx.fillRect(x,y,w,h);
+}
+var m=0;
+function highlight(x,y)
+{
+	ctx.fillStyle=cols[m++>4?m=0:m];
+	ctx.fillRect(x,y,w,h);
+}
+/*
+w=100;
+h=100;
+
+ctx.fillStyle="white";
+ctx.fillRect(100,100,100,100);
+test.insertIndex({x:100,y:100,w:100,h:100},'id','mouseout',function(){setTimeout(function(){ctx.fillStyle="white";ctx.fillRect(100,100,100,100);},60)});
+test.insertIndex({x:100,y:100,w:100,h:100},'id','mouseover',function(){highlight(100,100);});
+*/
+
+function rnd(min,max){ return Math.floor(Math.random()*max+min); }
+	</script>
+</body>
+</html>
