@@ -599,11 +599,10 @@ var RTree = function(width){
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
 	this.insert = function(rect, obj) {
-		if(arguments.length < 2 || (!rect.leaf && arguments.length < 1))
+		if(arguments.length < 2)
 			throw "Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object."
 		
-		if(!rect.leaf) rect.leaf = obj;
-		return(_insert_subtree(rect, _T));
+		return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
 	};
 	
 	/* non-recursive delete function

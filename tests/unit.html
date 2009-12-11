@@ -17,7 +17,7 @@ describe('RTree Creation', {
 					rt.insert(bounds, "JUST A TEST OBJECT!_"+i);
 					i--;
 				}
-        value_of(rt.count({x:0,y:0,w:10600,h:10600})).should_be(1000);
+        value_of(rt.search({x:0,y:0,w:10600,h:10600}).length).should_be(1000);
     },
     'Insert 1k More Objects': function() {
     		var i = 1000;
@@ -26,16 +26,16 @@ describe('RTree Creation', {
 					rt.insert(bounds, "JUST A TEST OBJECT!_"+i);
 					i--;
 				}
-        value_of(rt.count({x:0,y:0,w:10600,h:10600})).should_be(2000);
+        value_of(rt.search({x:0,y:0,w:10600,h:10600}).length).should_be(2000);
     }
 })
 describe('RTree Searching', {
-    '1k Out-of-Bounds Counts': function() {
+    '1k Out-of-Bounds Searches': function() {
     		var i = 1000;
     		var len = 0;
 				while(i > 0) {
 					var bounds = {x:-(Math.random()*10000+501), y:-(Math.random()*10000+501), w:(Math.random()*500), h:(Math.random()*500)};
-					len += rt.count(bounds);
+					len += rt.search(bounds).length;
 					i--;
 				}
         value_of(len).should_be(0);
