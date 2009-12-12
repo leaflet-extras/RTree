@@ -74,21 +74,6 @@ var RTree = function(width){
 	  return(larea * fill / lgeo); 
 	};
 	
-	var _make_MBR = function(nodes, rect) { // nodes must contain at least one rectangle
-		if(nodes.length < 1)
-			return({x:0, y:0, w:0, h:0});
-			//throw "make_MBR: nodes must contain at least one rectangle!";
-		if(!rect)
-			rect = {x:nodes[0].x, y:nodes[0].y, w:nodes[0].w, h:nodes[0].h};
-		else
-			rect.x = nodes[0].x; rect.y = nodes[0].y; rect.w = nodes[0].w; rect.h = nodes[0].h;
-			
-		for(var i = nodes.length-1; i>0; i--)
-			RTree.Rectangle.expand_rectangle(rect, nodes[i]);
-			
-		return(rect);
-	};
-	
 	/* find the best specific node(s) for object to be deleted from
 	 * [ leaf node parent ] = _remove_subtree(rectangle, object, root)
 	 * @private
@@ -127,7 +112,7 @@ var RTree = function(width){
 								ret_array = tree.nodes.splice(i, 1); 
 							}
 							// Resize MBR down...
-							_make_MBR(tree.nodes, tree);
+							RTree.Rectangle.make_MBR(tree.nodes, tree);
 							delete ret_obj.target;
 							if(tree.nodes.length < _Min_Width) { // Underflow
 								ret_obj.nodes = _search_subtree(tree, true, [], tree);
@@ -148,7 +133,7 @@ var RTree = function(width){
 				tree.nodes.splice(i+1, 1); // Remove unsplit node
 				// ret_obj.nodes contains a list of elements removed from the tree so far
 				if(tree.nodes.length > 0)
-					_make_MBR(tree.nodes, tree);
+					RTree.Rectangle.make_MBR(tree.nodes, tree);
 				for(var t = 0;t<ret_obj.nodes.length;t++)
 					_insert_subtree(ret_obj.nodes[t], tree);
 				ret_obj.nodes.length = 0;
@@ -164,7 +149,7 @@ var RTree = function(width){
 					delete ret_obj.nodes; // Just start resizing
 				}
 			} else { // we are just resizing
-				_make_MBR(tree.nodes, tree);
+				RTree.Rectangle.make_MBR(tree.nodes, tree);
 			}
 			current_depth -= 1;
 		}while(hit_stack.length > 0);
@@ -697,4 +682,25 @@ RTree.Rectangle.expand_rectangle = function(a, b)	{
 	a.h = Math.max(a.y+a.h, b.y+b.h) - ny;
 	a.x = nx; a.y = ny;
 	return(a);
+};
+
+/* generates a minimally bounding rectangle for all rectangles in
+ * array "nodes". If rect is set, it is modified into the MBR. Otherwise,
+ * a new rectangle is generated and returned.
+ * [ rectangle a ] = make_MBR(rectangle array nodes, rectangle rect)
+ * @static function
+ */
+RTree.Rectangle.make_MBR = function(nodes, rect) {
+	if(nodes.length < 1)
+		return({x:0, y:0, w:0, h:0});
+		//throw "make_MBR: nodes must contain at least one rectangle!";
+	if(!rect)
+		rect = {x:nodes[0].x, y:nodes[0].y, w:nodes[0].w, h:nodes[0].h};
+	else
+		rect.x = nodes[0].x; rect.y = nodes[0].y; rect.w = nodes[0].w; rect.h = nodes[0].h;
+		
+	for(var i = nodes.length-1; i>0; i--)
+		RTree.Rectangle.expand_rectangle(rect, nodes[i]);
+		
+	return(rect);
 };
