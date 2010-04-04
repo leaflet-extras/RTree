@@ -33,7 +33,8 @@ var RTree = function(width){
 	var _Max_Width = 6;  // Maximum width of any node before a split
 	if(!isNaN(width)){ _Min_Width = Math.floor(width/2.0); _Max_Width = width;}
 	// Start with an empty root-tree
-	var _T = {x:0, y:0, w:0, h:0, id:"root", nodes:[] }; 
+	var _T = {x:0, y:0, w:0, h:0, id:"root", nodes:[] };
+    
 	var isArray = function(o) {
 		return Object.prototype.toString.call(o) === '[object Array]'; 
 	};
@@ -43,22 +44,21 @@ var RTree = function(width){
 	 * @param {String} n			The prefix to use for the IDs generated.
 	 * @return {String}				A guarenteed unique ID.
 	 */
-	var _name_to_id = (function() {
-		// g = Global Function Hash Cache
-		var g = {};
-		return(function(n){
-			if(n && n.length > 0)
-			{
-				return((g[n] ? g[n] : g[n]=(function(n) {
-					// l - Local ID
-					var l = 1;
-					return(function(){
-						return(n+"_"+l++);
-					});
-				})(n))());
-			}
-		});
-	})();
+    var _name_to_id = (function() {
+        // hide our idCache inside this closure
+        var idCache = {};
+
+        // return the api: our function that returns a unique string with incrementing number appended to given idPrefix
+        return function(idPrefix) {
+            var idVal = 0;
+            if(idPrefix in idCache) {
+                idVal = idCache[idPrefix]++;
+            } else {
+                idCache[idPrefix] = 0;
+            }
+            return idPrefix + "_" + idVal;
+        }
+    })();
 
 	// This is my special addition to the world of r-trees
 	// every other (simple) method I found produced crap trees
@@ -83,7 +83,6 @@ var RTree = function(width){
 		var count_stack = []; // Contains the elements that overlap
 		var ret_array = [];
 		var current_depth = 1;
-		var anydeleted = false; // True if anything was deleted
 		
 		if(!rect || !RTree.Rectangle.overlap_rectangle(rect, root))
 		 return ret_array;
@@ -165,7 +164,6 @@ var RTree = function(width){
 		var best_choice_index = -1;
 		var best_choice_stack = [];
 		var best_choice_area;
-		var best_choice_node_count = _Max_Width;
 		
 		var load_callback = function(local_tree, local_node){
 			return(function(data) { 
@@ -179,7 +177,7 @@ var RTree = function(width){
 		do {	
 			if(best_choice_index != -1)	{
 				best_choice_stack.push(nodes[best_choice_index]);
-				var nodes = nodes[best_choice_index].nodes;
+				nodes = nodes[best_choice_index].nodes;
 				best_choice_index = -1;
 			}
 	
@@ -278,6 +276,7 @@ var RTree = function(width){
 		var highest_low_x = 0;
 		var lowest_high_y = nodes.length-1;
 		var highest_low_y = 0;
+        var t1, t2;
 		
 		for(var i = nodes.length-2; i>=0;i--)	{
 			var l = nodes[i];
@@ -290,19 +289,19 @@ var RTree = function(width){
 		var dy = Math.abs((nodes[lowest_high_y].y+nodes[lowest_high_y].h) - nodes[highest_low_y].y);
 		if( dx > dy )	{ 
 			if(lowest_high_x > highest_low_x)	{
-				var t1 = nodes.splice(lowest_high_x, 1)[0];
-				var t2 = nodes.splice(highest_low_x, 1)[0];
+				t1 = nodes.splice(lowest_high_x, 1)[0];
+				t2 = nodes.splice(highest_low_x, 1)[0];
 			}	else {
-				var t2 = nodes.splice(highest_low_x, 1)[0];
-				var t1 = nodes.splice(lowest_high_x, 1)[0];
+				t2 = nodes.splice(highest_low_x, 1)[0];
+				t1 = nodes.splice(lowest_high_x, 1)[0];
 			}
 		}	else {
 			if(lowest_high_y > highest_low_y)	{
-				var t1 = nodes.splice(lowest_high_y, 1)[0];
-				var t2 = nodes.splice(highest_low_y, 1)[0];
+				t1 = nodes.splice(lowest_high_y, 1)[0];
+				t2 = nodes.splice(highest_low_y, 1)[0];
 			}	else {
-				var t2 = nodes.splice(highest_low_y, 1)[0];
-				var t1 = nodes.splice(lowest_high_y, 1)[0];
+				t2 = nodes.splice(highest_low_y, 1)[0];
+				t1 = nodes.splice(lowest_high_y, 1)[0];
 			}
 		}
 		return([{x:t1.x, y:t1.y, w:t1.w, h:t1.h, nodes:[t1]},
@@ -600,17 +599,19 @@ var RTree = function(width){
 /* Rectangle - Generic rectangle object - Not yet used */
 
 RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
-	if(ix.x) {
-		var x = ix.x; var y = ix.y;	
+    var x, x2, y, y2, w, h;
+
+    if(ix.x) {
+		x = ix.x; y = ix.y;	
 			if(ix.w !== 0 && !ix.w && ix.x2){
-				var w = ix.x2-ix.x;	var h = ix.y2-ix.y;
+				w = ix.x2-ix.x;	h = ix.y2-ix.y;
 			}	else {
-				var w = ix.w;	var h = ix.h;
+				w = ix.w;	h = ix.h;
 			}
-		var x2 = x + w; var y2 = y + h; // For extra fastitude
+		x2 = x + w; y2 = y + h; // For extra fastitude
 	} else {
-		var x = ix; var y = iy;	var w = iw;	var h = ih;
-		var x2 = x + w; var y2 = y + h; // For extra fastitude
+		x = ix; y = iy;	w = iw;	h = ih;
+		x2 = x + w; y2 = y + h; // For extra fastitude
 	}
 
 	this.x1 = this.x = function(){return x;};
@@ -638,17 +639,18 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 	};
 	
 	this.setRect = function(ix, iy, iw, ih) {
+        var x, x2, y, y2, w, h;
 		if(ix.x) {
-			var x = ix.x; var y = ix.y;	
+			x = ix.x; y = ix.y;	
 			if(ix.w !== 0 && !ix.w && ix.x2) {
-				var w = ix.x2-ix.x;	var h = ix.y2-ix.y;
+				w = ix.x2-ix.x;	h = ix.y2-ix.y;
 			}	else {
-				var w = ix.w;	var h = ix.h;
+				w = ix.w;	h = ix.h;
 			}
-			var x2 = x + w; var y2 = y + h; // For extra fastitude
+			x2 = x + w; y2 = y + h; // For extra fastitude
 		} else {
-			var x = ix; var y = iy;	var w = iw;	var h = ih;
-			var x2 = x + w; var y2 = y + h; // For extra fastitude
+			x = ix; y = iy;	w = iw;	h = ih;
+			x2 = x + w; y2 = y + h; // For extra fastitude
 		}
 	};
 //End of RTree.Rectangle
