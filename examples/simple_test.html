@@ -164,7 +164,7 @@ var canvwrap=(function(){
 		} else {
 			var bounds = {x:xy.x, y:xy.y, w:(Math.random()*10), h:(Math.random()*10)};
 			var opts = {color:cols[(Math.random()*100).toFixed()%cols.length]};
-			if(rt.count(bounds) == 0)
+			if(rt.search(bounds).length == 0)
 			{
 				canvwrap.attachEvent(bounds,test_damnit,'mousedown', new_funcs, null, opts);
 				test_damnit++;
@@ -435,7 +435,7 @@ if( canvwrap.getTree().get_tree().nodes.length == 0 )
 		var opts = {color:cols[(Math.random()*100).toFixed()%cols.length]};
 		while(test_damnit < 10)
 		{
-			if(canvwrap.getTree().count({x:bounds.x, y:bounds.y, w:bounds.w, h:bounds.h}) == 0)
+			if(canvwrap.getTree().search({x:bounds.x, y:bounds.y, w:bounds.w, h:bounds.h}).length == 0)
 			{
 				canvwrap.attachEvent(bounds,test_damnit,'mousedown', new_funcs, null, opts);
 				test_damnit++;

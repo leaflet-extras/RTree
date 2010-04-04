@@ -92,7 +92,7 @@
 				test_func[ti](10000);
 				var diff = (new Date).getTime() - start;
 				$('<div>Time To Run: '+diff+'ms</div>').appendTo($("#"+results_name));
-				$('<div>Number of Elements in Tree: '+rt.count({x:-1, y:-1, w:100600, h:100600})+'</div>').appendTo($("#"+results_name));
+				$('<div>Number of Elements in Tree: '+rt.search({x:-1, y:-1, w:100600, h:100600}).length+'</div>').appendTo($("#"+results_name));
 				ti+=1;
 				if(ti < 7) { 
 					setTimeout(yield_some, 1000);

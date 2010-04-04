@@ -371,7 +371,7 @@ if( canvwrap.getTree().get_tree().nodes.length == 0 )
 		var opts = {color:cols[(Math.random()*100).toFixed()%5]};
 		while(test_damnit < 20000)
 		{
-			if(canvwrap.getTree().count({x:bounds.x-border_width-(25/scale_fact), y:bounds.y-border_width-(25/scale_fact), w:bounds.w+border_width*2+(50/scale_fact), h:bounds.h+border_width*2+(50/scale_fact)}) == 0)
+			if(canvwrap.getTree().search({x:bounds.x-border_width-(25/scale_fact), y:bounds.y-border_width-(25/scale_fact), w:bounds.w+border_width*2+(50/scale_fact), h:bounds.h+border_width*2+(50/scale_fact)}).length == 0)
 			{
 				canvwrap.attachEvent(bounds,test_damnit,'mousedown', new_func, null, opts);
 				test_damnit++;
