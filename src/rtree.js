@@ -2,26 +2,26 @@
 	rtree.js - General-Purpose Non-Recursive Javascript R-Tree Library
 	Version 0.6.2, December 5st 2009
 
-  Copyright (c) 2009 Jon-Carlos Rivera
-  
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files (the
-  "Software"), to deal in the Software without restriction, including
-  without limitation the rights to use, copy, modify, merge, publish,
-  distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so, subject to
-  the following conditions:
-  
-  The above copyright notice and this permission notice shall be
-  included in all copies or substantial portions of the Software.
-  
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+	Copyright (c) 2009 Jon-Carlos Rivera
+	
+	Permission is hereby granted, free of charge, to any person obtaining
+	a copy of this software and associated documentation files (the
+	"Software"), to deal in the Software without restriction, including
+	without limitation the rights to use, copy, modify, merge, publish,
+	distribute, sublicense, and/or sell copies of the Software, and to
+	permit persons to whom the Software is furnished to do so, subject to
+	the following conditions:
+	
+	The above copyright notice and this permission notice shall be
+	included in all copies or substantial portions of the Software.
+	
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+	EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+	NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+	LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+	OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+	WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 	Jon-Carlos Rivera - imbcmdth@hotmail.com
 ******************************************************************************/
@@ -37,7 +37,7 @@ var RTree = function(width){
 	if(!isNaN(width)){ _Min_Width = Math.floor(width/2.0); _Max_Width = width;}
 	// Start with an empty root-tree
 	var _T = {x:0, y:0, w:0, h:0, id:"root", nodes:[] };
-    
+	
 	var isArray = function(o) {
 		return Object.prototype.toString.call(o) === '[object Array]'; 
 	};
@@ -47,34 +47,34 @@ var RTree = function(width){
 	 * @param {String} n			The prefix to use for the IDs generated.
 	 * @return {String}				A guarenteed unique ID.
 	 */
-    var _name_to_id = (function() {
-        // hide our idCache inside this closure
-        var idCache = {};
+	var _name_to_id = (function() {
+		// hide our idCache inside this closure
+		var idCache = {};
 
-        // return the api: our function that returns a unique string with incrementing number appended to given idPrefix
-        return function(idPrefix) {
-            var idVal = 0;
-            if(idPrefix in idCache) {
-                idVal = idCache[idPrefix]++;
-            } else {
-                idCache[idPrefix] = 0;
-            }
-            return idPrefix + "_" + idVal;
-        }
-    })();
+		// return the api: our function that returns a unique string with incrementing number appended to given idPrefix
+		return function(idPrefix) {
+			var idVal = 0;
+			if(idPrefix in idCache) {
+				idVal = idCache[idPrefix]++;
+			} else {
+				idCache[idPrefix] = 0;
+			}
+			return idPrefix + "_" + idVal;
+		};
+	})();
 
 	// This is my special addition to the world of r-trees
 	// every other (simple) method I found produced crap trees
 	// this skews insertions to prefering squarer and emptier nodes
 	RTree.Rectangle.squarified_ratio = function(l, w, fill) {
-	  // Area of new enlarged rectangle
-	  var lperi = (l + w) / 2.0; // Average size of a side of the new rectangle
-	  var larea = l * w; // Area of new rectangle
-	  // return the ratio of the perimeter to the area - the closer to 1 we are, 
-	  // the more "square" a rectangle is. conversly, when approaching zero the 
-	  // more elongated a rectangle is
-	  var lgeo = larea / (lperi*lperi);
-	  return(larea * fill / lgeo); 
+		// Area of new enlarged rectangle
+		var lperi = (l + w) / 2.0; // Average size of a side of the new rectangle
+		var larea = l * w; // Area of new rectangle
+		// return the ratio of the perimeter to the area - the closer to 1 we are, 
+		// the more "square" a rectangle is. conversly, when approaching zero the 
+		// more elongated a rectangle is
+		var lgeo = larea / (lperi*lperi);
+		return(larea * fill / lgeo); 
 	};
 	
 	/* find the best specific node(s) for object to be deleted from
@@ -99,18 +99,18 @@ var RTree = function(width){
 			var tree = hit_stack.pop();
 			var i = count_stack.pop()-1;
 			
-		  if("target" in ret_obj) { // We are searching for a target
+			if("target" in ret_obj) { // We are searching for a target
 				while(i >= 0)	{
 					var ltree = tree.nodes[i];
 					if(RTree.Rectangle.overlap_rectangle(ret_obj, ltree)) {
 						if( (ret_obj.target && "leaf" in ltree && ltree.leaf === ret_obj.target)
 							||(!ret_obj.target && ("leaf" in ltree || RTree.Rectangle.contains_rectangle(ltree, ret_obj)))) { // A Match !!
-				  		// Yup we found a match...
-				  		// we can cancel search and start walking up the list
-				  		if("nodes" in ltree) {// If we are deleting a node not a leaf...
-				  			ret_array = _search_subtree(ltree, true, [], ltree);
-				  			tree.nodes.splice(i, 1); 
-				  		} else {
+						// Yup we found a match...
+						// we can cancel search and start walking up the list
+						if("nodes" in ltree) {// If we are deleting a node not a leaf...
+							ret_array = _search_subtree(ltree, true, [], ltree);
+							tree.nodes.splice(i, 1); 
+						} else {
 								ret_array = tree.nodes.splice(i, 1); 
 							}
 							// Resize MBR down...
@@ -120,15 +120,15 @@ var RTree = function(width){
 								ret_obj.nodes = _search_subtree(tree, true, [], tree);
 							}
 							break;
-			  		}/*	else if("load" in ltree) { // A load
-				  	}*/	else if("nodes" in ltree) { // Not a Leaf
-				  		current_depth += 1;
-				  		count_stack.push(i);
-				  		hit_stack.push(tree);
-				  		tree = ltree;
-				  		i = ltree.nodes.length;
-				  	}
-				  }
+					}/*	else if("load" in ltree) { // A load
+					}*/	else if("nodes" in ltree) { // Not a Leaf
+						current_depth += 1;
+						count_stack.push(i);
+						hit_stack.push(tree);
+						tree = ltree;
+						i = ltree.nodes.length;
+					}
+				}
 					i -= 1;
 				}
 			} else if("nodes" in ret_obj) { // We are unsplitting
@@ -186,28 +186,24 @@ var RTree = function(width){
 	
 			for(var i = nodes.length-1; i >= 0; i--) {
 				var ltree = nodes[i];
-				if("leaf" in ltree) {  
+				if("leaf" in ltree) {
 					// Bail out of everything and start inserting
 					best_choice_index = -1;
 					break;
-			  } /*else if(ltree.load) {
-  				throw( "Can't insert into partially loaded tree ... yet!");
-  				//jQuery.getJSON(ltree.load, load_callback(this, ltree));
-  				//delete ltree.load;
-  			}*/
-			  // Area of new enlarged rectangle
-			  var old_lratio = RTree.Rectangle.squarified_ratio(ltree.w, ltree.h, ltree.nodes.length+1);
+				} 
+				// Area of new enlarged rectangle
+				var old_lratio = RTree.Rectangle.squarified_ratio(ltree.w, ltree.h, ltree.nodes.length+1);
 
-			  // Enlarge rectangle to fit new rectangle
-			  var nw = Math.max(ltree.x+ltree.w, rect.x+rect.w) - Math.min(ltree.x, rect.x);
-			  var nh = Math.max(ltree.y+ltree.h, rect.y+rect.h) - Math.min(ltree.y, rect.y);
-			  
-			  // Area of new enlarged rectangle
-			  var lratio = RTree.Rectangle.squarified_ratio(nw, nh, ltree.nodes.length+2);
-			  
-			  if(best_choice_index < 0 || Math.abs(lratio - old_lratio) < best_choice_area) {
-			  	best_choice_area = Math.abs(lratio - old_lratio); best_choice_index = i;
-			  }
+				// Enlarge rectangle to fit new rectangle
+				var nw = Math.max(ltree.x+ltree.w, rect.x+rect.w) - Math.min(ltree.x, rect.x);
+				var nh = Math.max(ltree.y+ltree.h, rect.y+rect.h) - Math.min(ltree.y, rect.y);
+			
+				// Area of new enlarged rectangle
+				var lratio = RTree.Rectangle.squarified_ratio(nw, nh, ltree.nodes.length+2);
+				
+				if(best_choice_index < 0 || Math.abs(lratio - old_lratio) < best_choice_area) {
+					best_choice_area = Math.abs(lratio - old_lratio); best_choice_index = i;
+				}
 			}
 		}while(best_choice_index != -1);
 
@@ -231,7 +227,7 @@ var RTree = function(width){
 	 * @private
 	 */
 	var _pick_next = function(nodes, a, b) {
-	  // Area of new enlarged rectangle
+	// Area of new enlarged rectangle
 		var area_a = RTree.Rectangle.squarified_ratio(a.w, a.h, a.nodes.length+1);
 		var area_b = RTree.Rectangle.squarified_ratio(b.w, b.h, b.nodes.length+1);
 		var high_area_delta;
@@ -279,7 +275,7 @@ var RTree = function(width){
 		var highest_low_x = 0;
 		var lowest_high_y = nodes.length-1;
 		var highest_low_y = 0;
-        var t1, t2;
+		var t1, t2;
 		
 		for(var i = nodes.length-2; i>=0;i--)	{
 			var l = nodes[i];
@@ -308,7 +304,7 @@ var RTree = function(width){
 			}
 		}
 		return([{x:t1.x, y:t1.y, w:t1.w, h:t1.h, nodes:[t1]},
-			      {x:t2.x, y:t2.y, w:t2.w, h:t2.h, nodes:[t2]} ]);
+					{x:t2.x, y:t2.y, w:t2.w, h:t2.h, nodes:[t2]} ]);
 	};
 	
 	var _attach_data = function(node, more_tree){
@@ -325,8 +321,9 @@ var RTree = function(width){
 	var _search_subtree = function(rect, return_node, return_array, root) {
 		var hit_stack = []; // Contains the elements that overlap
 	
-		if(!RTree.Rectangle.overlap_rectangle(rect, root))
-		 return(return_array);
+		if(!RTree.Rectangle.overlap_rectangle(rect, root)){
+			return(return_array);
+		}
 	
 		var load_callback = function(local_tree, local_node){
 			return(function(data) { 
@@ -341,19 +338,19 @@ var RTree = function(width){
 	
 			for(var i = nodes.length-1; i >= 0; i--) {
 				var ltree = nodes[i];
-			  if(RTree.Rectangle.overlap_rectangle(rect, ltree)) {
-			  	if("nodes" in ltree) { // Not a Leaf
-			  		hit_stack.push(ltree.nodes);
-			  	} else if("leaf" in ltree) { // A Leaf !!
-			  		if(!return_node)
-		  				return_array.push(ltree.leaf);
-		  			else
-		  				return_array.push(ltree);
-		  		}/*	else if("load" in ltree) { // We need to fetch a URL for some more tree data
-	  				jQuery.getJSON(ltree.load, load_callback(this, ltree));
-	  				delete ltree.load;
-	  			//	i++; // Replay this entry
-	  			}*/
+				if(RTree.Rectangle.overlap_rectangle(rect, ltree)) {
+					if("nodes" in ltree) { // Not a Leaf
+						hit_stack.push(ltree.nodes);
+					} else if("leaf" in ltree) { // A Leaf !!
+						if(!return_node)
+							return_array.push(ltree.leaf);
+						else
+							return_array.push(ltree);
+					}/*	else if("load" in ltree) { // We need to fetch a URL for some more tree data
+						jQuery.getJSON(ltree.load, load_callback(this, ltree));
+						delete ltree.load;
+					//	i++; // Replay this entry
+					}*/
 				}
 			}
 		}while(hit_stack.length > 0);
@@ -369,7 +366,7 @@ var RTree = function(width){
 		var bc; // Best Current node
 		// Initial insertion is special because we resize the Tree and we don't
 		// care about any overflow (seriously, how can the first object overflow?)
-		if(root.nodes.length == 0) {
+		if(root.nodes.length === 0) {
 			root.x = node.x; root.y = node.y;
 			root.w = node.w; root.h = node.h;
 			root.nodes.push(node);
@@ -385,11 +382,11 @@ var RTree = function(width){
 		// Walk back up the tree resizing and inserting as needed
 		do {
 			//handle the case of an empty node (from a split)
-			if(bc && "nodes" in bc && bc.nodes.length == 0) {
+			if(bc && "nodes" in bc && bc.nodes.length === 0) {
 				var pbc = bc; // Past bc
 				bc = tree_stack.pop();
 				for(var t=0;t<bc.nodes.length;t++)
-					if(bc.nodes[t] === pbc || bc.nodes[t].nodes.length == 0) {
+					if(bc.nodes[t] === pbc || bc.nodes[t].nodes.length === 0) {
 						bc.nodes.splice(t, 1);
 						break;
 				}
@@ -420,7 +417,7 @@ var RTree = function(width){
 					
 					if(tree_stack.length < 1)	{ // If are splitting the root..
 						bc.nodes.push(a[0]);
-						tree_stack.push(bc);     // Reconsider the root element
+						tree_stack.push(bc);	// Reconsider the root element
 						ret_obj = a[1];
 					} /*else {
 						delete bc;
@@ -459,8 +456,9 @@ var RTree = function(width){
 	 * @public
 	 */
 	this.search = function(rect, return_node, return_array) {
-		if(arguments.length < 1)
-			throw "Wrong number of arguments. RT.Search requires at least a bounding rectangle."
+		if(arguments.length < 1){
+			throw "Wrong number of arguments. RT.Search requires at least a bounding rectangle.";
+		}
 
 		switch(arguments.length) {
 			case 1:
@@ -487,8 +485,9 @@ var RTree = function(width){
 		var current_depth = 1;
 		var return_string = "";
 		
-		if(rect && !RTree.Rectangle.overlap_rectangle(rect, _T))
-		 return "";
+		if(rect && !RTree.Rectangle.overlap_rectangle(rect, _T)){
+			return "";
+		}
 		
 		if(!tree)	{
 			count_stack.push(_T.nodes.length);
@@ -510,33 +509,36 @@ var RTree = function(width){
 				
 			while(i >= 0)	{
 				var ltree = nodes[i];
-			  if(!rect || RTree.Rectangle.overlap_rectangle(rect, ltree)) {
-			  	if(ltree.nodes) { // Not a Leaf
-			  		if(current_depth >= max_depth) {
-			  			var len = return_stack.length;
-			  			var nam = _name_to_id("saved_subtree");
-			  			return_string += "{x:"+ltree.x.toFixed()+",y:"+ltree.y.toFixed()+",w:"+ltree.w.toFixed()+",h:"+ltree.h.toFixed()+",load:'"+nam+".js'}";
-			  			return_stack[nam] = this.toJSON(rect, ltree);
-							if(i > 0)
-								return_string += ","
-			  		}	else {
-				  		return_string += "{x:"+ltree.x.toFixed()+",y:"+ltree.y.toFixed()+",w:"+ltree.w.toFixed()+",h:"+ltree.h.toFixed()+",nodes:[";
-				  		current_depth += 1;
-				  		count_stack.push(i);
-				  		hit_stack.push(nodes);
-				  		nodes = ltree.nodes;
-				  		i = ltree.nodes.length;
-				  	}
-			  	}	else if(ltree.leaf) { // A Leaf !!
-			  		var data = ltree.leaf.toJSON ? ltree.leaf.toJSON() : JSON.stringify(ltree.leaf);
-		  			return_string += "{x:"+ltree.x.toFixed()+",y:"+ltree.y.toFixed()+",w:"+ltree.w.toFixed()+",h:"+ltree.h.toFixed()+",leaf:" + data + "}";
-						if(i > 0)
-							return_string += ","
-		  		}	else if(ltree.load) { // A load
-		  			return_string += "{x:"+ltree.x.toFixed()+",y:"+ltree.y.toFixed()+",w:"+ltree.w.toFixed()+",h:"+ltree.h.toFixed()+",load:'" + ltree.load + "'}";
-						if(i > 0)
-							return_string += ","
-			  	}
+			if(!rect || RTree.Rectangle.overlap_rectangle(rect, ltree)) {
+				if(ltree.nodes) { // Not a Leaf
+					if(current_depth >= max_depth) {
+						var len = return_stack.length;
+						var nam = _name_to_id("saved_subtree");
+						return_string += "{x:"+ltree.x.toFixed()+",y:"+ltree.y.toFixed()+",w:"+ltree.w.toFixed()+",h:"+ltree.h.toFixed()+",load:'"+nam+".js'}";
+						return_stack[nam] = this.toJSON(rect, ltree);
+							if(i > 0){
+								return_string += ",";
+							}
+					}	else {
+						return_string += "{x:"+ltree.x.toFixed()+",y:"+ltree.y.toFixed()+",w:"+ltree.w.toFixed()+",h:"+ltree.h.toFixed()+",nodes:[";
+						current_depth += 1;
+						count_stack.push(i);
+						hit_stack.push(nodes);
+						nodes = ltree.nodes;
+						i = ltree.nodes.length;
+					}
+				}	else if(ltree.leaf) { // A Leaf !!
+					var data = ltree.leaf.toJSON ? ltree.leaf.toJSON() : JSON.stringify(ltree.leaf);
+					return_string += "{x:"+ltree.x.toFixed()+",y:"+ltree.y.toFixed()+",w:"+ltree.w.toFixed()+",h:"+ltree.h.toFixed()+",leaf:" + data + "}";
+						if(i > 0){
+							return_string += ",";
+						}
+				}	else if(ltree.load) { // A load
+					return_string += "{x:"+ltree.x.toFixed()+",y:"+ltree.y.toFixed()+",w:"+ltree.w.toFixed()+",h:"+ltree.h.toFixed()+",load:'" + ltree.load + "'}";
+						if(i > 0){
+							return_string += ",";
+						}
+				}
 				}
 				i -= 1;
 			}
@@ -558,7 +560,7 @@ var RTree = function(width){
 	 */
 	this.remove = function(rect, obj) {
 		if(arguments.length < 1)
-			throw "Wrong number of arguments. RT.remove requires at least a bounding rectangle."
+			throw "Wrong number of arguments. RT.remove requires at least a bounding rectangle.";
 
 		switch(arguments.length) {
 			case 1:
@@ -587,7 +589,7 @@ var RTree = function(width){
 	 */
 	this.insert = function(rect, obj) {
 		if(arguments.length < 2)
-			throw "Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object."
+			throw "Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object.";
 		
 		return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
 	};
@@ -598,13 +600,12 @@ var RTree = function(width){
 
 //End of RTree
 };
-
-/* Rectangle - Generic rectangle object - Not yet used */
+/* Rectangle - Generic rectangle object - used! */
 
 RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
-    var x, x2, y, y2, w, h;
+	var x, x2, y, y2, w, h;
 
-    if(ix.x) {
+	if(ix.x) {
 		x = ix.x; y = ix.y;	
 			if(ix.w !== 0 && !ix.w && ix.x2){
 				w = ix.x2-ix.x;	h = ix.y2-ix.y;
@@ -642,7 +643,7 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 	};
 	
 	this.setRect = function(ix, iy, iw, ih) {
-        var x, x2, y, y2, w, h;
+		var x, x2, y, y2, w, h;
 		if(ix.x) {
 			x = ix.x; y = ix.y;	
 			if(ix.w !== 0 && !ix.w && ix.x2) {
@@ -709,6 +710,7 @@ RTree.Rectangle.make_MBR = function(nodes, rect) {
 		
 	return(rect);
 };
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = RTree;
+	module.exports = RTree;
 }
