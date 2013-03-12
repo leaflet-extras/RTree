@@ -677,7 +677,14 @@ var RTree = function(width){
 				}
 			i++;
 		}
-		
+		var first = _temp[0];
+		i=1;
+		len = _temp.length;
+		while(i<len){
+			first.extend(_temp[i]);
+			i++;
+		}
+		return _insert_subtree({leaf:obj,x:first.x(),y:first.y(),h:first.h(),w:first.w()}, _T);
 	};
 	this.geoJSON=function(prelim) {
 		var features,feature;
