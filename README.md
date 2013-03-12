@@ -77,6 +77,17 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 -  Search a 10x10 area that starts at position 10x10:
 - `var myObjects = myRTree.search({x:10, y:10, w:10, h:10});`
 
+###RTree.geoJSON:
+
+-  **RTree.insert** ( **geojson** )
+-  insert a geojson feature collection or feature array
+-  should handle all geometry except geometry collection
+
+###RTree.bbox:
+
+-  **RTree.bbox** ( [**southWest**, **northEast**] ) or **RTree.bbox** ( **southWest**, **northEast** )
+-  shortcut to `rTree.search({x:southWest[0],y:southWest[1],w:northEast[0]-southWest[0],h:northEast[1]-southWest[1]})`
+
 ###Notes
 
 <sup><a name="f1">1</a></sup> Default max node width is currently 6.
