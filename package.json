@@ -1,0 +1,25 @@
+{
+    "name": "rtree",
+    "version": "0.0.1",
+    "description": "rtree library for javascript",
+    "keywords": ["rtree"],
+    "maintainers": [
+        {
+            "name": "Jon-Carlos Rivera",
+            "email": "imbcmdth@hotmail.com",
+            "web": "https://github.com/imbcmdth/RTree"
+        }
+    ],
+    "bugs": {
+        "web": "https://github.com/imbcmdth/RTree/issues"
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/imbcmdth/RTree.git"
+        }
+    ],
+    "dependencies": {},
+    "main": "./src/rtree.js"
+
+}

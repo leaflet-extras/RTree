@@ -709,3 +709,4 @@ RTree.Rectangle.make_MBR = function(nodes, rect) {
 		
 	return(rect);
 };
+module.exports = RTree;
