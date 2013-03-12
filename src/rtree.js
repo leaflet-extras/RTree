@@ -559,9 +559,9 @@ var RTree = function(width){
 	 * [ number ] = RTree.remove(rectangle, obj)
 	 */
 	this.remove = function(rect, obj) {
-		if(arguments.length < 1)
+		if(arguments.length < 1) {
 			throw "Wrong number of arguments. RT.remove requires at least a bounding rectangle.";
-
+		}
 		switch(arguments.length) {
 			case 1:
 				arguments[1] = false; // obj == false for conditionals
@@ -588,16 +588,102 @@ var RTree = function(width){
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
 	this.insert = function(rect, obj) {
-		if(arguments.length < 2)
+		if(arguments.length < 2) {
 			throw "Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object.";
-		
+		}
 		return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
 	};
 	
 	/* non-recursive delete function
 	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
-
+	 var bbox = function (a,obj) {
+	 	if(obj && obj.bbox){
+	 		return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
+	 	}
+		var first = a[0];
+		var len = a.length;
+		var i = 1;
+		var _temp = {min:first,max:first};
+		while (i<len) {
+			if(a[i][0] < _temp.min[0]) {
+				_temp.min[0] = a[i][0];
+			}else if(a[i][0] > _temp.max[0]) {
+				_temp.max[0] = a[i][0];
+			}
+			if(a[i][1] < _temp.min[1]) {
+				_temp.min[1] = a[i][1];
+			}else if(a[i][1] > _temp.max[1]) {
+				_temp.max[1] = a[i][1];
+			}
+			i++;
+		}
+		var out =  {x:_temp.min[0],y:_temp.min[1],w:(_temp.max[0]-_temp.min[0]),h:(_temp.max[1]-_temp.min[1])};
+		if(obj){
+			out.leaf=obj;
+		}
+		return out;
+	};
+	var geoJSON = {};
+	geoJSON.point = function(obj) {
+		return(_insert_subtree({x:obj.geometry.coordinates[0],y:obj.geometry.coordinates[1],w:0,h:0,leaf:obj}, _T));
+	};
+	geoJSON.multiPointLineString = function(obj) {
+		return(_insert_subtree(bbox(obj.geometry.coordinates,obj), _T));
+	};
+	geoJSON.multiLineStringPolygon = function(obj) {
+		return(_insert_subtree(bbox(Array.prototype.concat.apply([],obj.geometry.coordinates),obj), _T));
+	};
+	geoJSON.multiPolygon = function(obj) {
+		return(_insert_subtree(bbox(Array.prototype.concat.apply([],Array.prototype.concat.apply([],obj.geometry.coordinates)),obj), _T));
+	};
+	this.geoJSON=function(prelim) {
+		var features,feature;
+		if(isArray(prelim)) {
+			features=prelim;
+		}else if(prelim.features && isArray(prelim.features)) {
+			features=prelim.features;
+		}else{
+			throw("this isn't what we're looking for");
+		}
+		var len = features.length;
+		var i = 0;
+		while(i<len){
+			console.log(i);
+			feature = features[i];
+			if(feature.type === "Feature"){
+				switch(feature.geometry.type){
+					case "Point":
+						geoJSON.point(feature);
+						break;
+					case "MultiPoint":
+						geoJSON.multiPointLineString(feature);
+						break;
+					case "LineString":
+						geoJSON.multiPointLineString(feature);
+						break;
+					case "MultiLineString":
+						geoJSON.multiLineStringPolygon(feature);
+						break;
+					case "Polygon":
+						geoJSON.multiLineStringPolygon(feature);
+						break;
+					case "MultiPolygon":
+						geoJSON.multiPolygon(feature);
+						break;
+				}
+			}
+			i++;
+		}
+	};
+	this.bbox=function(sw,ne){
+		if(!ne){
+			ne=sw[1];
+			sw=sw[0];
+		}
+		return this.search({x:sw[0],y:sw[1],w:ne[0]-sw[0],h:ne[1]-sw[1]});
+	};
+	
 //End of RTree
 };
 /* Rectangle - Generic rectangle object - used! */
