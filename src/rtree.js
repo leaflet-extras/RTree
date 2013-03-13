@@ -738,6 +738,9 @@ var RTree = function(width){
 	
 //End of RTree
 };
+var rTree = function(width){
+	return new RTree(width);
+};
 /* Rectangle - Generic rectangle object - used! */
 
 RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
