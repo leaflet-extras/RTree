@@ -87,7 +87,7 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 
 ###RTree.bbox:
 
--  **RTree.bbox** ( [**southWest**, **northEast**] ) or **RTree.bbox** ( **southWest**, **northEast** )
+-  **RTree.bbox** ( [ **southWest**, **northEast**] ) or **RTree.bbox** ( **southWest**, **northEast** )
 -  shortcut to `rTree.search({x:southWest[0],y:southWest[1],w:northEast[0]-southWest[0],h:northEast[1]-southWest[1]})`
 
 ###Notes
