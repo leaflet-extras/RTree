@@ -18,6 +18,8 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 
 -  Make a new RTree with a max node width of 10:
 - `var myRTree = new RTree(10);`
+-  You may also use a lowercase factory function:
+-  `var myRTree2 = rTree(10);`
 
 
 ###RTree.insert
