@@ -597,14 +597,21 @@ var RTree = function(width){
 	/* non-recursive delete function
 	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
-	 var bbox = function (a,obj) {
+	 var bbox = function (ar,obj) {
 	 	if(obj && obj.bbox){
 	 		return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
 	 	}
+	 	var len = ar.length
+	 	var i = 0;
+	 	var a = new Array(len);
+	 	while(i<len){
+	 		a[i]=[ar[i][0],ar[i][1]];
+	 		i++;
+	 	}
 		var first = a[0];
-		var len = a.length;
-		var i = 1;
-		var _temp = {min:first,max:first};
+		len = a.length;
+		i = 1;
+		var _temp = {min:[].concat(first),max:[].concat(first)};
 		while (i<len) {
 			if(a[i][0] < _temp.min[0]) {
 				_temp.min[0] = a[i][0];
@@ -637,19 +644,67 @@ var RTree = function(width){
 	geoJSON.multiPolygon = function(obj) {
 		return(_insert_subtree(bbox(Array.prototype.concat.apply([],Array.prototype.concat.apply([],obj.geometry.coordinates)),obj), _T));
 	};
+	geoJSON.makeRec = function(obj){
+		return new RTree.Rectangle(obj.x,obj.y,obj.w,obj.h);
+	};
+	geoJSON.geometryCollection = function(obj){
+		if(obj.bbox){
+			return(_insert_subtree({leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]}, _T));
+		}
+		var geos = obj.geometry.geometries;
+		var i = 0;
+		var len = geos.length;
+		var _temp=[];
+		var g;
+		while(i<len){
+			g=geos[i];
+			switch(g.type){
+					case "Point":
+						_temp.push(geoJSON.makeRec({x:g.coordinates[0],y:g.coordinates[1],w:0,h:0}));
+						break;
+					case "MultiPoint":
+						_temp.push(geoJSON.makeRec(bbox(g.coordinates)));
+						break;
+					case "LineString":
+						_temp.push(geoJSON.makeRec(bbox(g.coordinates)));
+						break;
+					case "MultiLineString":
+						_temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([],g.coordinates))));
+						break;
+					case "Polygon":
+						_temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([],g.coordinates))));
+						break;
+					case "MultiPolygon":
+						_temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([],Array.prototype.concat.apply([],g.coordinates)))));
+						break;
+					case "GeometryCollection":
+						geos=geos.concat(g.geometries);
+						len = geos.length;
+						break;
+				}
+			i++;
+		}
+		var first = _temp[0];
+		i=1;
+		len = _temp.length;
+		while(i<len){
+			first.expand(_temp[i]);
+			i++;
+		}
+		return _insert_subtree({leaf:obj,x:first.x(),y:first.y(),h:first.h(),w:first.w()}, _T);
+	};
 	this.geoJSON=function(prelim) {
 		var features,feature;
 		if(isArray(prelim)) {
-			features=prelim;
+			features=prelim.slice();
 		}else if(prelim.features && isArray(prelim.features)) {
-			features=prelim.features;
+			features=prelim.features.slice();
 		}else{
 			throw("this isn't what we're looking for");
 		}
 		var len = features.length;
 		var i = 0;
 		while(i<len){
-			console.log(i);
 			feature = features[i];
 			if(feature.type === "Feature"){
 				switch(feature.geometry.type){
@@ -671,6 +726,9 @@ var RTree = function(width){
 					case "MultiPolygon":
 						geoJSON.multiPolygon(feature);
 						break;
+					case "GeometryCollection":
+						geoJSON.geometryCollection(feature);
+						break;
 				}
 			}
 			i++;
@@ -685,6 +743,9 @@ var RTree = function(width){
 	};
 	
 //End of RTree
+};
+var rTree = function(width){
+	return new RTree(width);
 };
 /* Rectangle - Generic rectangle object - used! */
 
