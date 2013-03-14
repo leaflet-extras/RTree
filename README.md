@@ -83,29 +83,29 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 
 ```JavaScript
 myRTree.geoJSON({
-	type : "FeatureCollection",
-	features : [
+	"type":"FeatureCollection",
+	"features":[
 		{
-			type : "Feature",
-			geometry : {
-				type : "Point",
-				coordinates :[100, 1]
+			"type":"Feature",
+			"geometry":{
+				"type":"Point",
+				"coordinates":[100,1]
 			},
-			properties : {
-				prop0 : "value0"
+			"properties":{
+				"prop0":"value0"
 			}
 		},
 		{
-			type : "Feature",
-			geometry : {
-				type : "LineString",
-				coordinates : [
-					[100, 0],
-					[101, 1]
+			"type":"Feature",
+			"geometry":{
+				"type":"LineString",
+				"coordinates":[
+					[100,0],
+					[101,1]
 				]
 			},
-			properties : {
-				prop0 :"value0"
+			"properties":{
+				"prop0":"value0"
 			}
 		}
 	]
