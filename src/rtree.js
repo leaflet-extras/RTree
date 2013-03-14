@@ -734,12 +734,64 @@ var RTree = function(width){
 			i++;
 		}
 	};
-	this.bbox=function(sw,ne){
-		if(!ne){
-			ne=sw[1];
-			sw=sw[0];
+	this.bbox=function(){
+		var w,s,e,n,callback,_temp,_err;
+		switch(arguments.length){
+			case 0:
+				throw("not enough arguments");
+			case 1:
+				w=arguments[0][0][0];
+				s=arguments[0][0][1];
+				e=arguments[0][1][0];
+				n=arguments[0][1][1];
+				break;
+			case 2:
+				if(typeof arguments[1]==="function"){
+					w=arguments[0][0][0];
+					s=arguments[0][0][1];
+					e=arguments[0][1][0];
+					n=arguments[0][1][1];
+					callback=arguments[1];
+					break;
+				}else{
+					w=arguments[0][0];
+					s=arguments[0][1];
+					e=arguments[1][0];
+					n=arguments[1][1];
+					break;
+				}
+			case 3:
+				w=arguments[0][0];
+				s=arguments[0][1];
+				e=arguments[1][0];
+				n=arguments[1][1];
+				callback=arguments[2];
+				break;
+			case 4:
+				w=arguments[0];
+				s=arguments[1];
+				e=arguments[2];
+				n=arguments[3];
+				break;
+			case 5:
+				w=arguments[0];
+				s=arguments[1];
+				e=arguments[2];
+				n=arguments[3];
+				callback=arguments[4];
+				break;
 		}
-		return this.search({x:sw[0],y:sw[1],w:ne[0]-sw[0],h:ne[1]-sw[1]});
+		if(!callback){
+			return this.search({x:s,y:w,w:e-w,h:n-s});
+		}else{
+			try{
+				_temp = this.search({x:s,y:w,w:e-w,h:n-s});
+			}catch(e){
+				_err=e;
+			}finally{
+				callback(_err,_temp);
+			}
+		}
 	};
 	
 //End of RTree
