@@ -1,4 +1,4 @@
-#RTree
+#rTree
 
 A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Licensed.
 
@@ -13,21 +13,21 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 
 ###Returns: 
 
--  An empty **RTree** object.
+-  An empty **rTree** object.
 
 ###Usage: 
 
--  Make a new RTree with a max node width of 10:
-- `var myRTree = new rTree(10);`
+-  Make a new rTree with a max node width of 10:
+- `var myRTree = rTree(10);`
 -  do the same async:
 -  `rTree(10,function(err,myRTree){...code goes here...});`
 -  don't have to do it all in the closure fyi
--  `var myRTree;rTree(function(err,rt){myRTree=rTree;});
+-  `var myRTree;rTree(function(err,rt){myRTree=rTree;});`
 
 
-##RTree.insert
+##rTree.insert
 
--  **RTree.insert** ( Rectangle[<sup>3</sup>](#f3) **bounds**, Object **element** _[, Function **callback** ]_ )
+-  **rTree.insert** ( Rectangle[<sup>3</sup>](#f3) **bounds**, Object **element** _[, Function **callback** ]_ )
 
 ###Parameters: 
 
@@ -45,9 +45,9 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 - `myRTree.insert({x:10, y:10, w:10, h:10}, myObject);`
 
 
-##RTree.remove
+##rTree.remove
 
--  **RTree.remove** ( Rectangle[<sup>3</sup>](#f3) **area** _[, Object **element**, Function **callback**]_ )
+-  **rTree.remove** ( Rectangle[<sup>3</sup>](#f3) **area** _[, Object **element**, Function **callback**]_ )
 
 ###Parameters: 
 
@@ -66,9 +66,9 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 - Delete only specific_object if it touches the 10x10 rectangle starting at position 10x10:
 - `var myDelCount = myRTree.delete({x:10, y:10, w:10, h:10}, specific_object);`
 
-##RTree.geoJSON:
+##rTree.geoJSON:
 
-- **RTree.geoJSON** ( Object or Array **geoJSON** _[, Function **callback**]_)
+- **rTree.geoJSON** ( Object or Array **geoJSON** _[, Function **callback**]_)
 
 ###Parameters
 
@@ -81,7 +81,7 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 
 ###Usage:
 
-```JavaScript
+```JSON
 myRTree.geoJSON({
 	"type":"FeatureCollection",
 	"features":[
@@ -112,9 +112,9 @@ myRTree.geoJSON({
 });
 ```
 
-##RTree.bbox:
+##rTree.bbox:
 
--  **RTree.bbox** ( Bounds **area** _[, Function **callback**]_)
+-  **rTree.bbox** ( Bounds **area** _[, Function **callback**]_)
 
 ###Parameters
 
@@ -127,12 +127,12 @@ myRTree.geoJSON({
 
 ###Usage:
 - Search a 10x10 area that starts at position 10x10 (these are all equivilent):
-- `var myObjects1 = myRTree.bbox([[10,10], [20, 20]]);`
-- `var myObjects2; myRTree.bbox([[10,10], [20, 20]], function(err,data){if(!err){myObjects2 = data}});`
-- `var myObjects3 = myRTree.bbox([10,10], [20, 20]);`
-- `var myObjects4; myRTree.bbox([10,10], [20, 20], function(err,data){if(!err){myObjects4 = data}});`
-- `var myObjects5 = myRTree.bbox(10,10, 20, 20);`
-- `var myObjects6; myRTree.bbox(10,10, 20, 20, function(err,data){if(!err){myObjects6 = data}});`
+- `var myObjects1 = myRTree.bbox([[10,10],[20,20]]);`
+- `var myObjects2; myRTree.bbox([[10,10],[20,20]], function(err,data){if(!err){myObjects2 = data}});`
+- `var myObjects3 = myRTree.bbox([10,10],[20,20]);`
+- `var myObjects4; myRTree.bbox([10,10],[20,20], function(err,data){if(!err){myObjects4 = data}});`
+- `var myObjects5 = myRTree.bbox(10,10,20,20);`
+- `var myObjects6; myRTree.bbox(10,10,20,20, function(err,data){if(!err){myObjects6 = data}});`
 
 ##RTree.search
 
