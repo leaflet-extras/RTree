@@ -609,7 +609,7 @@ var RTree = function(width){
 			throw "Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object.";
 		}
 		if(!callback){
-			return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
+			return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T)||true);
 		}else{
 			try{
 				_temp=(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
@@ -959,5 +959,5 @@ RTree.Rectangle.make_MBR = function(nodes, rect) {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-	module.exports = RTree;
+	module.exports = rTree;
 }
