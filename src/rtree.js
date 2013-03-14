@@ -587,27 +587,38 @@ var RTree = function(width){
 	/* non-recursive insert function
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
-	this.insert = function(rect, obj) {
+	this.insert = function(rect, obj, callback) {
+		var _temp,_err;
 		if(arguments.length < 2) {
 			throw "Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object.";
 		}
-		return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
+		if(!callback){
+			return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
+		}else{
+			try{
+				_temp=(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
+			}catch(e){
+				_err=e;
+			}finally{
+				callback(_err,_temp);
+			}
+		}
 	};
 	
 	/* non-recursive delete function
 	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
-	 var bbox = function (ar,obj) {
-	 	if(obj && obj.bbox){
-	 		return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
-	 	}
-	 	var len = ar.length
-	 	var i = 0;
-	 	var a = new Array(len);
-	 	while(i<len){
-	 		a[i]=[ar[i][0],ar[i][1]];
-	 		i++;
-	 	}
+	var bbox = function (ar,obj) {
+		if(obj && obj.bbox){
+			return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
+		}
+		var len = ar.length;
+		var i = 0;
+		var a = new Array(len);
+		while(i<len){
+			a[i]=[ar[i][0],ar[i][1]];
+			i++;
+		}
 		var first = a[0];
 		len = a.length;
 		i = 1;
