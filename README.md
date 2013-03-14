@@ -134,7 +134,7 @@ myRTree.geoJSON({
 - `var myObjects5 = myRTree.bbox(10,10,20,20);`
 - `var myObjects6; myRTree.bbox(10,10,20,20, function(err,data){if(!err){myObjects6 = data}});`
 
-##RTree.search
+##rTree.search
 
 -  **RTree.search** ( Rectangle[<sup>3</sup>](#f3) **area** )
 
