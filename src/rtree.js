@@ -559,8 +559,7 @@ var RTree = function(width){
 	 * [ number ] = RTree.remove(rectangle, obj)
 	 */
 	this.remove = function(rect, obj, callback) {
-		var _callback;
-		var args;
+		var _callback,args,numberdeleted,ret_array;
 		if(arguments.length < 1) {
 			throw "Wrong number of arguments. RT.remove requires at least a bounding rectangle.";
 		}
@@ -583,8 +582,8 @@ var RTree = function(width){
 				break;
 		}
 		if(args[1] === false) { // Do area-wide delete
-			var numberdeleted = 0;
-			var ret_array = [];
+			numberdeleted = 0;
+			ret_array = [];
 			do { 
 				numberdeleted=ret_array.length; 
 				ret_array = ret_array.concat(_remove_subtree.apply(this, args));
