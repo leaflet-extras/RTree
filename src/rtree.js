@@ -558,7 +558,8 @@ var RTree = function(width){
 	/* non-recursive function that deletes a specific
 	 * [ number ] = RTree.remove(rectangle, obj)
 	 */
-	this.remove = function(rect, obj) {
+	this.remove = function(rect, obj,callback) {
+		var _callback;
 		if(arguments.length < 1) {
 			throw "Wrong number of arguments. RT.remove requires at least a bounding rectangle.";
 		}
@@ -566,7 +567,17 @@ var RTree = function(width){
 			case 1:
 				arguments[1] = false; // obj == false for conditionals
 			case 2:
+				if(typeof arguments[1]==="function"){
+					_callback=arguments[1];
+					arguments[1]=false;
+				}
 				arguments[2] = _T; // Add root node to end of argument list
+				break;
+			case 3:
+				if(typeof arguments[2]==="function"){
+					_callback=arguments[2];
+					arguments[2] = _T;
+				}
 			default:
 				arguments.length = 3;
 		}
@@ -577,10 +588,18 @@ var RTree = function(width){
 				numberdeleted=ret_array.length; 
 				ret_array = ret_array.concat(_remove_subtree.apply(this, arguments));
 			}while( numberdeleted !=  ret_array.length);
-			return ret_array;
+			if(!_callback){
+				return ret_array;
+			}else{
+				_callback(null, ret_array);
+			}
 		}
 		else { // Delete a specific item
-			return(_remove_subtree.apply(this, arguments));
+			if(!_callback){
+				return(_remove_subtree.apply(this, arguments));
+			}else{
+				_callback(null, _remove_subtree.apply(this, arguments));
+			}
 		}
 	};
 		
