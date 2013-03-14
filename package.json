@@ -1,25 +1,29 @@
 {
     "name": "rtree",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "rtree library for javascript",
     "keywords": ["rtree"],
-    "maintainers": [
+    "contributors": [
         {
             "name": "Jon-Carlos Rivera",
             "email": "imbcmdth@hotmail.com",
             "web": "https://github.com/imbcmdth/RTree"
+        },
+        {
+        	"name" : "Calvin Metcalf",
+        	"email": "calvin.metalf@gmail.com",
+        	"web": "https://github.com/calvinmetcalf"
         }
     ],
     "bugs": {
-        "web": "https://github.com/imbcmdth/RTree/issues"
+        "web": "https://github.com/leaflet-extras/RTree/issues"
     },
     "repositories": [
         {
             "type": "git",
-            "url": "https://github.com/imbcmdth/RTree.git"
+            "url": "https://github.com/leaflet-extras/RTree.git"
         }
     ],
     "dependencies": {},
     "main": "./src/rtree.js"
-
 }
