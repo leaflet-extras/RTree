@@ -68,7 +68,7 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Lice
 
 ##rTree.geoJSON:
 
-- **rTree.geoJSON** ( Object or Array **geoJSON** _[, Function **callback**]_)
+- **rTree.geoJSON** ( Object or Array **geoJSON** _[, Function **callback**]_ )
 
 ###Parameters
 
@@ -114,7 +114,7 @@ myRTree.geoJSON({
 
 ##rTree.bbox:
 
--  **rTree.bbox** ( Bounds **area** _[, Function **callback**]_)
+-  **rTree.bbox** ( Bounds **area** _[, Function **callback**]_ )
 
 ###Parameters
 
@@ -136,11 +136,14 @@ myRTree.geoJSON({
 
 ##rTree.search
 
--  **RTree.search** ( Rectangle[<sup>3</sup>](#f3) **area** )
+-  **RTree.search** ( Rectangle[<sup>3</sup>](#f3) **area** [, Boolian **return_node**, Array **return_array**, Function **callback**] )
 
 ###Parameters: 
 
 -  **area** : **required** : An area to search within.
+-  **return_node** : _optional_ : Whether to return the entire node, mainly internal option.
+-  **return_array** : _optional_ : An existing array to add the results to, defaults to [], mainly internal option.
+- **callback** : _optional_ : Function called with the results<sup>2</sup>](#f2).
 
 ###Returns: 
 
