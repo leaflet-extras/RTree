@@ -86,22 +86,20 @@ var RTree = function(width){
 		var count_stack = []; // Contains the elements that overlap
 		var ret_array = [];
 		var current_depth = 1;
-		
-		if(!rect || !RTree.Rectangle.overlap_rectangle(rect, root))
-		 return ret_array;
-
+		var tree, i,ltree;
+		if(!rect || !RTree.Rectangle.overlap_rectangle(rect, root)){
+			return ret_array;
+		}
 		var ret_obj = {x:rect.x, y:rect.y, w:rect.w, h:rect.h, target:obj};
 		
 		count_stack.push(root.nodes.length);
 		hit_stack.push(root);
-
 		do {
-			var tree = hit_stack.pop();
-			var i = count_stack.pop()-1;
-			
-			if("target" in ret_obj) { // We are searching for a target
+			tree = hit_stack.pop();
+			i = count_stack.pop()-1;
+			if("target" in ret_obj) { // will this ever be false?
 				while(i >= 0)	{
-					var ltree = tree.nodes[i];
+					ltree = tree.nodes[i];
 					if(RTree.Rectangle.overlap_rectangle(ret_obj, ltree)) {
 						if( (ret_obj.target && "leaf" in ltree && ltree.leaf === ret_obj.target)
 							||(!ret_obj.target && ("leaf" in ltree || RTree.Rectangle.contains_rectangle(ltree, ret_obj)))) { // A Match !!
@@ -155,7 +153,6 @@ var RTree = function(width){
 			}
 			current_depth -= 1;
 		}while(hit_stack.length > 0);
-		
 		return(ret_array);
 	};
 
@@ -558,56 +555,86 @@ var RTree = function(width){
 	/* non-recursive function that deletes a specific
 	 * [ number ] = RTree.remove(rectangle, obj)
 	 */
-	this.remove = function(rect, obj) {
+	this.remove = function(rect, obj, callback) {
+		var _callback,args,numberdeleted,ret_array;
 		if(arguments.length < 1) {
 			throw "Wrong number of arguments. RT.remove requires at least a bounding rectangle.";
 		}
 		switch(arguments.length) {
 			case 1:
-				arguments[1] = false; // obj == false for conditionals
+				args = [rect,false,_T];
+				break;
 			case 2:
-				arguments[2] = _T; // Add root node to end of argument list
-			default:
-				arguments.length = 3;
+				if(typeof arguments[1]==="function"){
+					_callback=obj;
+					obj=false;
+				}
+				args = [rect,obj,_T];
+				break;
+			case 3:
+				if(typeof callback==="function"){
+					_callback=callback;
+				}
+				args = [rect,obj,_T];
+				break;
 		}
-		if(arguments[1] === false) { // Do area-wide delete
-			var numberdeleted = 0;
-			var ret_array = [];
+		if(args[1] === false) { // Do area-wide delete
+			numberdeleted = 0;
+			ret_array = [];
 			do { 
 				numberdeleted=ret_array.length; 
-				ret_array = ret_array.concat(_remove_subtree.apply(this, arguments));
+				ret_array = ret_array.concat(_remove_subtree.apply(this, args));
 			}while( numberdeleted !=  ret_array.length);
-			return ret_array;
+			if(!_callback){
+				return ret_array;
+			}else{
+				_callback(null, ret_array);
+			}
 		}
 		else { // Delete a specific item
-			return(_remove_subtree.apply(this, arguments));
+			if(!_callback){
+				return(_remove_subtree.apply(this, args));
+			}else{
+				_callback(null, _remove_subtree.apply(this, args));
+			}
 		}
 	};
 		
 	/* non-recursive insert function
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
-	this.insert = function(rect, obj) {
+	this.insert = function(rect, obj, callback) {
+		var _temp,_err;
 		if(arguments.length < 2) {
 			throw "Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object.";
 		}
-		return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
+		if(!callback){
+			return(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
+		}else{
+			try{
+				_temp=(_insert_subtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, _T));
+			}catch(e){
+				_err=e;
+			}finally{
+				callback(_err,_temp);
+			}
+		}
 	};
 	
 	/* non-recursive delete function
 	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
-	 var bbox = function (ar,obj) {
-	 	if(obj && obj.bbox){
-	 		return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
-	 	}
-	 	var len = ar.length
-	 	var i = 0;
-	 	var a = new Array(len);
-	 	while(i<len){
-	 		a[i]=[ar[i][0],ar[i][1]];
-	 		i++;
-	 	}
+	var bbox = function (ar,obj) {
+		if(obj && obj.bbox){
+			return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
+		}
+		var len = ar.length;
+		var i = 0;
+		var a = new Array(len);
+		while(i<len){
+			a[i]=[ar[i][0],ar[i][1]];
+			i++;
+		}
 		var first = a[0];
 		len = a.length;
 		i = 1;
@@ -693,7 +720,8 @@ var RTree = function(width){
 		}
 		return _insert_subtree({leaf:obj,x:first.x(),y:first.y(),h:first.h(),w:first.w()}, _T);
 	};
-	this.geoJSON=function(prelim) {
+	this.geoJSON=function(prelim, callback) {
+		callback = callback||function(){return true};
 		var features,feature;
 		if(isArray(prelim)) {
 			features=prelim.slice();
@@ -733,19 +761,87 @@ var RTree = function(width){
 			}
 			i++;
 		}
+		return callback(null, true);
 	};
-	this.bbox=function(sw,ne){
-		if(!ne){
-			ne=sw[1];
-			sw=sw[0];
+	this.bbox=function(){
+		var w,s,e,n,callback,_temp,_err;
+		switch(arguments.length){
+			case 0:
+				throw("not enough arguments");
+			case 1:
+				w=arguments[0][0][0];
+				s=arguments[0][0][1];
+				e=arguments[0][1][0];
+				n=arguments[0][1][1];
+				break;
+			case 2:
+				if(typeof arguments[1]==="function"){
+					w=arguments[0][0][0];
+					s=arguments[0][0][1];
+					e=arguments[0][1][0];
+					n=arguments[0][1][1];
+					callback=arguments[1];
+					break;
+				}else{
+					w=arguments[0][0];
+					s=arguments[0][1];
+					e=arguments[1][0];
+					n=arguments[1][1];
+					break;
+				}
+			case 3:
+				w=arguments[0][0];
+				s=arguments[0][1];
+				e=arguments[1][0];
+				n=arguments[1][1];
+				callback=arguments[2];
+				break;
+			case 4:
+				w=arguments[0];
+				s=arguments[1];
+				e=arguments[2];
+				n=arguments[3];
+				break;
+			case 5:
+				w=arguments[0];
+				s=arguments[1];
+				e=arguments[2];
+				n=arguments[3];
+				callback=arguments[4];
+				break;
 		}
-		return this.search({x:sw[0],y:sw[1],w:ne[0]-sw[0],h:ne[1]-sw[1]});
+		if(!callback){
+			return this.search({x:s,y:w,w:e-w,h:n-s});
+		}else{
+			try{
+				_temp = this.search({x:s,y:w,w:e-w,h:n-s});
+			}catch(e){
+				_err=e;
+			}finally{
+				callback(_err,_temp);
+			}
+		}
 	};
 	
 //End of RTree
 };
-var rTree = function(width){
-	return new RTree(width);
+var rTree = function(width, callback){
+	var _temp,_err;
+	if(typeof width === "function"){
+		callback = width;
+		width = undefined;
+	}
+	if(!callback){
+		return new RTree(width);
+	}else{
+		try{
+			_temp = new RTree(width);
+		}catch(e){
+			_err=e;
+		}finally{
+			callback(_err,_temp);
+		}
+	}
 };
 /* Rectangle - Generic rectangle object - used! */
 
@@ -813,7 +909,11 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
  * @static function
  */
 RTree.Rectangle.overlap_rectangle = function(a, b) {
-	return(a.x < (b.x+b.w) && (a.x+a.w) > b.x && a.y < (b.y+b.h) && (a.y+a.h) > b.y);
+	if((a.h===0&&a.w===0)||(b.h===0&&b.w===0)){
+		return(a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y);
+	}else{
+		return(a.x < (b.x+b.w) && (a.x+a.w) > b.x && a.y < (b.y+b.h) && (a.y+a.h) > b.y);	
+	}
 };
 
 /* returns true if rectangle a is contained in rectangle b
