@@ -744,8 +744,23 @@ var RTree = function(width){
 	
 //End of RTree
 };
-var rTree = function(width){
-	return new RTree(width);
+var rTree = function(width, callback){
+	var _temp,_err;
+	if(typeof width === "function"){
+		callback = width;
+		width = undefined;
+	}
+	if(!callback){
+		return new RTree(width);
+	}else{
+		try{
+			_temp = new RTree(width);
+		}catch(e){
+			_err=e;
+		}finally{
+			callback(_err,_temp);
+		}
+	}
 };
 /* Rectangle - Generic rectangle object - used! */
 
