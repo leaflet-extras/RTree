@@ -452,22 +452,44 @@ var RTree = function(width){
 	 * [ nodes | objects ] = RTree.search(rectangle, [return node data], [array to fill])
 	 * @public
 	 */
-	this.search = function(rect, return_node, return_array) {
+	this.search = function(rect, return_node, return_array, callback) {
 		if(arguments.length < 1){
 			throw "Wrong number of arguments. RT.Search requires at least a bounding rectangle.";
 		}
-
+		var args, _callback,_temp,_err;
 		switch(arguments.length) {
 			case 1:
-				arguments[1] = false;// Add an "return node" flag - may be removed in future
+				return _search_subtree.apply(this, [rect, false, [], _T]);
 			case 2:
-				arguments[2] = []; // Add an empty array to contain results
+				if(typeof return_node === "function"){
+					args = [rect, false, [], _T];
+					_callback = return_node;
+					break;
+				}else{
+					return _search_subtree.apply(this, [rect, return_node, [], _T]);
+				}
 			case 3:
-				arguments[3] = _T; // Add root node to end of argument list
-			default:
-				arguments.length = 4;
+				if(typeof return_array === "function"){
+					args = [rect, return_node, [], _T];
+					_callback = return_array;
+					break;
+				}else{
+					return _search_subtree.apply(this, [rect, return_node, return_array, _T]);
+				}
+			case 4:
+				args = [rect, return_node, return_array, _T];
+				_callback = callback;
+				break;
 		}
-		return(_search_subtree.apply(this, arguments));
+		if(_callback){
+			try{
+				_temp = _search_subtree.apply(this,args);
+			}catch(e){
+				_err = e;
+			}finally{
+				_callback(_err,_temp);
+			}
+		}	
 	};
 		
 	/* partially-recursive toJSON function
@@ -813,13 +835,7 @@ var RTree = function(width){
 		if(!callback){
 			return this.search({x:x1,y:y1,w:x2-x1,h:y2-y1});
 		}else{
-			try{
-				_temp = this.search({x:x1,y:y1,w:x2-x1,h:y2-y1});
-			}catch(e){
-				_err=e;
-			}finally{
-				callback(_err,_temp);
-			}
+			this.search({x:x1,y:y1,w:x2-x1,h:y2-y1},callback);
 		}
 	};
 	
