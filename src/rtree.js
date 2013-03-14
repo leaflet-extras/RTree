@@ -693,7 +693,8 @@ var RTree = function(width){
 		}
 		return _insert_subtree({leaf:obj,x:first.x(),y:first.y(),h:first.h(),w:first.w()}, _T);
 	};
-	this.geoJSON=function(prelim) {
+	this.geoJSON=function(prelim, callback) {
+		callback = callback||function(){return true};
 		var features,feature;
 		if(isArray(prelim)) {
 			features=prelim.slice();
@@ -733,6 +734,7 @@ var RTree = function(width){
 			}
 			i++;
 		}
+		return callback(null, true);
 	};
 	this.bbox=function(){
 		var w,s,e,n,callback,_temp,_err;
