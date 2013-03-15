@@ -1,6 +1,6 @@
 #rTree
 
-A non-recursive R-Tree library in pure JavaScript with no dependencies. MIT Licensed.
+A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of [Jon-Carlos Rivera's fantastic library](https://github.com/imbcmdth/RTree) which sadly seems not to be maintained. MIT Licensed.
 
 ##API
 
@@ -158,5 +158,7 @@ myRTree.geoJSON({
 ###Notes
 
 <sup><a name="f1">1</a></sup> Default max node width is currently 6.
+
 <sup><a name="f2">2</a></sup> All callbacks are optional and follow the node.js convention of the first parameter being an error object which is undefined unless there is an error and the second parameter being whatever the method would have returned.
+
 <sup><a name="f3">3</a></sup> A _Rectangle_ is **any** object with public x, y, w, h properties. The object itself is not saved or used directly but copies are made of its x, y, w, h properties.
