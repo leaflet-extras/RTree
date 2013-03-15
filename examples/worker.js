@@ -1,16 +1,32 @@
 var m = L.map('map').setView([42.34100473739444, -71.09639167785643], 14);
 var mq=L.tileLayer("http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpeg", {attribution:'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains:'1234'}).addTo(m);
 var bikes = L.geoJson(undefined,{style:style,onEachFeature:onEachFeature}).addTo(m);
-var rt = rTree();
+var rf = function(data,cb){
+	var request,_resp;
+	importScripts("../src/rtree.js");
+	if(!_db.rt){
+		_db.rt=rTree();
+		request = new XMLHttpRequest();
+		request.open("GET", data);
+		request.onreadystatechange = function() {
+			if (request.readyState === 4 && request.status === 200) {
+				_resp=JSON.parse(request.responseText);
+				_db.rt.geoJSON(_resp);
+				cb(true);
+			}
+		};
+		request.send();
+	}else{
+		return _db.rt.bbox(data);
+	}
+}
+var rt = communist(rf);
 var bd;
-L.Util.ajax("libs/bikes.json",function(data){
-	rt.geoJSON(data,function(err,success){
-		if(!err){
-			bikes.addData(data);
-			bd=data;
-		}
-	});
+
+rt.data(communist.makeUrl("libs/bikes.json")).then(function(d){
+	showAll();
 });
+
 var popupTemplate=Mustache.compile('<ul>{{#items}}<li><strong>{{key}}</strong>: {{value}}</li>{{/items}}</ul>');
 function onEachFeature(ft,layer) {
     if (ft.properties) {
@@ -110,12 +126,15 @@ var BoxSelect = L.Map.BoxZoom.extend({
 m.boxZoom.disable();//turn off  the defult behavior
 var boxSelect = new BoxSelect(m);//new box select
 boxSelect.enable();//add it
-m.on("boxselectend",function(e){bikes.clearLayers();
-bikes.addData(rt.bbox(e.boxSelectBounds));});
+m.on("boxselectend",function(e){
+rt.data(e.boxSelectBounds).then(function(d){bikes.clearLayers();bikes.addData(d);});});
 function showAll(){
-	bikes.clearLayers();
+
 	var bounds = m.getBounds();
-	bikes.addData(rt.bbox([[bounds.getSouthWest().lng,bounds.getSouthWest().lat],[bounds.getNorthEast().lng,bounds.getNorthEast().lat]]));
+	rt.data([[bounds.getSouthWest().lng,bounds.getSouthWest().lat],[bounds.getNorthEast().lng,bounds.getNorthEast().lat]]).then(function(d){
+			bikes.clearLayers();
+		bikes.addData(d);
+	});
 }
 m.on("contextmenu moveend",showAll);
 
