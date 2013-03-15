@@ -1,4 +1,4 @@
-var m = L.map('map',{zoomControl:false}).setView([42.2, -71], 8)
+var m = L.map('map').setView([42.316670142535514, -71.04240417480469], 11);
 var mq=L.tileLayer("http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpeg", {attribution:'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains:'1234'}).addTo(m);
 var bikes = L.geoJson(undefined,{style:style,onEachFeature:onEachFeature}).addTo(m);
 var rt = rTree();
@@ -118,3 +118,5 @@ function showAll(){
 	bikes.addData(rt.bbox([[bounds.getSouthWest().lng,bounds.getSouthWest().lat],[bounds.getNorthEast().lng,bounds.getNorthEast().lat]]));
 }
 m.on("contextmenu moveend",showAll);
+
+

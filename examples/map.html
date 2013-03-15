@@ -5,35 +5,89 @@
         <meta http-equiv="X-UA-Compatible" content="chrome=1">
         <title>rTree Map Demo</title>
         <meta name="description" content="Demo of rTree.js with leaflet">
-        <meta name="viewport" content="width=device-width">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        
-
-        <style>
-            html { 
-                height: 100% 
-            }
-            body { 
-                height: 100%; 
-                margin: 0; 
-                padding: 0;
-            }
-            #map{ 
-                height: 100% 
-            }
-        </style>
-    <link rel="stylesheet" href="libs/gh-fork-ribbon.css" />
+        <script src="http://leaflet-extras.github.com/leaflet.css/dist/leaflet.css.bundle.min.js"></script>
+  <style type="text/css">
+ html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        overflow:hidden;
+      
+       }
+      #map {
+       margin-top: 40px;
+        width:100%;
+     height: 100%;
+      }
+    
+    </style>
+   <link rel="stylesheet" href="libs/gh-fork-ribbon.css" />
     <!--[if IE]>
         <link rel="stylesheet" href="libs/gh-fork-ribbon.ie.css" />
     <![endif]-->
-    <script src="http://leaflet-extras.github.com/leaflet.css/dist/leaflet.css.bundle.min.js"></script>
+    <link rel="stylesheet" href="libs/bootstrap/css/bootstrap.css" />
 </head>
-<body><div class="github-fork-ribbon-wrapper left">
+<body><div class="github-fork-ribbon-wrapper right">
         <div class="github-fork-ribbon"><!--from http://simonwhitaker.github.com/github-fork-ribbon-css/ -->
             <a href="https://github.com/leaflet-extras/RTree">Fork me on GitHub</a>
         </div>
     </div>
-        <div id="map"></div>
+    
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span class="brand">rTree</span>
+          <div class="nav-collapse collapse">
+            <ul class="nav"><li>
+              <div class="btn-group">
+  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+    About
+    <span class="caret"></span>
+  </a>
+  
+<ul class="dropdown-menu"><li>Move the map to watch it recompute based on the bounds,<br/>also if you hold down shift you can put in your own bbox<br/>and right click (or scroll) to remove it</p>
+</li></ul></div>
+</li>
+           
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+  
+        <div id="map">
+       
+    
+        <div id="map"></div>        <script type="text/javascript" src="libs/jquery-1.9.1.min.js"></script><script>  $(function(){
+            var mapmargin = parseInt($("#map").css("margin-top"), 10);
+      $('#map').css("height", ($(window).height() - mapmargin));
+      $(window).on("resize", function(e){
+        $('#map').css("height", ($(window).height() - mapmargin));
+           if($(window).width()>=980){
+      	$('#map').css("margin-top",40);
+      }else{
+      		$('#map').css("margin-top",-20);
+      }
+      });
+      if($(window).width()>=980){
+      	$('#map').css("margin-top",40);
+      }else{
+      		$('#map').css("margin-top",-20);
+      }
+            });
+            </script>
+            
+
+        <script type="text/javascript" src="libs/bootstrap/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="libs/leaflet.ajax.min.js"></script>
         <script type="text/javascript" src="libs/mustache.js"></script>
         <script type="text/javascript" src="../src/rtree.js"></script>
