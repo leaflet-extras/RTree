@@ -136,6 +136,7 @@ describe('RTree', function () {
 					if(success){
 						gTree.remove({x:0,y:0,h:500,w:500},function(err,result){
 							result.length.should.equal(geoJson.features.length);
+							done();
 						});
 					}
 				});
