@@ -1,6 +1,21 @@
 #rTree
 
-A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of [Jon-Carlos Rivera's fantastic library](https://github.com/imbcmdth/RTree) which sadly seems not to be maintained. MIT Licensed.
+A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of [Jon-Carlos Rivera's fantastic library](https://github.com/imbcmdth/RTree) which sadly seems not to be maintained. MIT Licensed. 
+
+##So far:
+
+- Bugfix when deleting points.
+- Common.js module.
+- Updated tests.
+- Factory function for constructor.
+- Method for dealing with GeoJSON.
+- All methods now accept callbacks.
+- Query by bbox instead of rectangle. 
+
+##Todo:
+
+- Submit to NPM.
+- Update examples.
 
 ##API
 
