@@ -6,8 +6,7 @@ var bd;
 L.Util.ajax("libs/bikes.json",function(data){
 	rt.geoJSON(data,function(err,success){
 		if(!err){
-			bikes.addData(data);
-			bd=data;
+			showAll();
 		}
 	});
 });
