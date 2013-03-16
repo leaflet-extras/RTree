@@ -11,9 +11,8 @@
  */
 var RTree = function(width){
 	// Variables to control tree-dimensions
-	var _Min_Width = 3;  // Minimum width of any node before a merge
-	var _Max_Width = 6;  // Maximum width of any node before a split
-	if(!isNaN(width)){ _Min_Width = Math.floor(width/2.0); _Max_Width = width;}
+	var _Max_Width = parseInt(width,10)||6;  // Maximum width of any node before a split
+	var _Min_Width = Math.floor(_Max_Width/2.0);;  // Minimum width of any node before a merge
 	// Start with an empty root-tree
 	var _T = {x:0, y:0, w:0, h:0, id:"root", nodes:[] };
 	
