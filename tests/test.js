@@ -20,8 +20,8 @@ describe('RTree', function () {
 			assert.equal(rslt.length,1000);
 		});
 		it('Insert 1k more Objects',function() {
-		var i = 1000;
-				while(i > 0) {
+		var i = 2000;
+				while(i > 1000) {
 					var bounds = {x:(Math.random()*10000), y:(Math.random()*10000), w:(Math.random()*500), h:(Math.random()*500)};
 					rt.insert(bounds, "JUST A TEST OBJECT!_"+i);
 					i--;
@@ -53,13 +53,17 @@ describe('RTree', function () {
 	});
 	describe('RTree Deletion', function(){
 		var g_len = 0;
+		var t = rt.getTree();
+		console.log([t.x,t.y,t.w,t.h]);
 		it('Delete Half the RTree', function() {
-			var bounds = {x:0,y:0,w:5300,h:10600};
+			var bounds = {x:0,y:0,w:10600,h:10600};
 			g_len += rt.remove(bounds).length;
 			assert.notEqual(g_len,0);
 		});
+		t = rt.getTree();
+		console.log([t.x,t.y,t.w,t.h]);
 		it('Delete the Other Half of the RTree', function() {
-			var bounds = {x:5000, y:0, w:5300, h:10500};
+			var bounds = {x:0,y:0,w:10600,h:10600};
 			g_len += rt.remove(bounds).length;
 			assert.equal(g_len,2000);
 		});
