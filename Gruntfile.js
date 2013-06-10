@@ -71,11 +71,11 @@ module.exports = function(grunt) {
 							browserName: "chrome",
 							platform: "linux",
 						}
-					]
-				},
+					],
 				urls: [
 						"http://localhost:8000/tests/index.html"
 					]
+				}
 			}
 		}
 	});
