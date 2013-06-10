@@ -72,10 +72,7 @@ module.exports = function(grunt) {
 							platform: "linux",
 							version: "21"
 						},
-						{
-						browserName: "chrome",
-						platform: "OS X 10.8",
-					},{
+					{
 						browserName: "safari",
 						platform: "OS X 10.8",
 						version:'6'
@@ -87,10 +84,7 @@ module.exports = function(grunt) {
 						browserName: "iphone",
 						platform: "OS X 10.8",
 						version:'6'
-					}, {
-						browserName: 'chrome',
-						platform: 'XP'
-					}, {
+					},  {
 						browserName: 'chrome',
 						platform: 'linux'
 					}, {
@@ -106,31 +100,18 @@ module.exports = function(grunt) {
 						platform: 'win7',
 						version: '12'
 					},{
-						browserName: 'safari',
-						platform: 'win7',
-						version: '5'
-					},
-					{
 						browserName: 'internet explorer',
 						platform: 'win7',
 						version: '9'
-					},
-					{
-						browserName: 'internet explorer',
-						platform: 'win7',
-						version: '8'
-					},
-					{
+					},{
 						browserName: 'internet explorer',
 						platform: 'xp',
 						version: '8'
-					},
-					{
+					},{
 						browserName: 'internet explorer',
 						platform: 'xp',
 						version: '7'
-					},
-					{
+					},{
 						browserName: 'internet explorer',
 						platform: 'xp',
 						version: '6'
