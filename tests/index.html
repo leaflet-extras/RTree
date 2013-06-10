@@ -10,7 +10,8 @@
     <script src="test.js"></script>
     <script>
       window.onload = function() {
-           mocha.run()
+          if (window.mochaPhantomJS) { mochaPhantomJS.run(); }
+      else { mocha.run(); }
       };
     </script>
   </head>

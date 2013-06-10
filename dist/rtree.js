@@ -1,3 +1,9 @@
+/****************************************************************************** 
+rtree.js -Non-Recursive Javascript R-Tree Library
+Version 1.0.0, March 15th 2013
+
+https://github.com/leaflet-extras/RTree.
+******************************************************************************/
 /**
  * RTree - A simple r-tree structure for great results.
  * @constructor
@@ -141,6 +147,12 @@ var RTree = function(width){
 		var bestChoiceIndex = -1;
 		var bestChoiceStack = [];
 		var bestChoiceArea;
+		
+		/*var load_callback = function(local_tree, local_node){
+			return function(data) {
+				local_tree.attachData(local_node, data);
+			};
+		};*/
 	
 		bestChoiceStack.push(root);
 		var nodes = root.nodes;
@@ -179,7 +191,7 @@ var RTree = function(width){
 	};
 
 	/* split a set of nodes into two roughly equally-filled nodes
-	 * [ an array of two new arrays of nodes ] = linearSplit(array of nodes)
+	 * [ an array of two new arrays of nodes ] = linear_split(array of nodes)
 	 * @private
 	 */
 	var linearSplit = function(nodes) {
@@ -191,7 +203,7 @@ var RTree = function(width){
 	};
 	
 	/* insert the best source rectangle into the best fitting parent node: a or b
-	 * [] = pickNext(array of source nodes, target node array a, target node array b)
+	 * [] = pick_next(array of source nodes, target node array a, target node array b)
 	 * @private
 	 */
 	var pickNext = function(nodes, a, b) {
@@ -235,7 +247,7 @@ var RTree = function(width){
 	};
 
 	/* pick the 'best' two starter nodes to use as seeds using the 'linear' criteria
-	 * [ an array of two new arrays of nodes ] = pickLinear(array of source nodes)
+	 * [ an array of two new arrays of nodes ] = pick_linear(array of source nodes)
 	 * @private
 	 */
 	var pickLinear = function(nodes) {
@@ -299,6 +311,11 @@ var RTree = function(width){
 			return(returnArray);
 		}
 	
+		/*var load_callback = function(local_tree, local_node){
+			return function(data) {
+				local_tree.attachData(local_node, data);
+			};
+		};*/
 	
 		hitStack.push(root.nodes);
 	
@@ -316,7 +333,11 @@ var RTree = function(width){
 						} else {
 							returnArray.push(ltree);
 						}
-					}
+					}/*	else if('load' in ltree) { // We need to fetch a URL for some more tree data
+						jQuery.getJSON(ltree.load, load_callback(this, ltree));
+						delete ltree.load;
+					//	i++; // Replay this entry
+					}*/
 				}
 			}
 		}while(hitStack.length > 0);
@@ -340,7 +361,7 @@ var RTree = function(width){
 		}
 		
 		// Find the best fitting leaf node
-		// chooseLeaf returns an array of all tree levels (including root)
+		// choose_leaf returns an array of all tree levels (including root)
 		// that were traversed while trying to find the leaf
 		var treeStack = chooseLeafSubtree(node, root);
 		var retObj = node;//{x:rect.x,y:rect.y,w:rect.w,h:rect.h, leaf:obj};
@@ -377,7 +398,7 @@ var RTree = function(width){
 				if(bc.nodes.length <= maxWidth)	{ // Start Resizeing Up the Tree
 					retObj = {x:bc.x,y:bc.y,w:bc.w,h:bc.h};
 				}	else { // Otherwise Split this Node
-					// linearSplit() returns an array containing two new nodes
+					// linear_split() returns an array containing two new nodes
 					// formed from the split of the previous node's overflow
 					var a = linearSplit(bc.nodes);
 					retObj = a;//[1];
@@ -506,7 +527,7 @@ var RTree = function(width){
 				if(ltree.nodes) { // Not a Leaf
 					if(currentDepth >= maxDepth) {
 						//var len = returnStack.length;
-						var nam = nameToId('savedSubtree');
+						var nam = nameToId('saved_subtree');
 						returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',load:"'+nam+'.js"}';
 						returnStack[nam] = this.toJSON(rect, ltree);
 							if(i > 0){
@@ -760,7 +781,7 @@ var RTree = function(width){
 		return callback(null, true);
 	};
 	this.bbox=function(){
-		var x1,y1,x2,y2,callback;
+		var x1,y1,x2,y2,callback;//,_temp,_err;
 		switch(arguments.length){
 			case 0:
 				throw('not enough arguments');

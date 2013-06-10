@@ -1,6 +1,6 @@
 {
   "name": "rtree",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "rtree library for javascript",
   "keywords": [
     "rtree"
@@ -14,13 +14,27 @@
   },
   "dependencies": {},
   "license": "MIT",
-  "main": "./src/rtree.js",
+  "main": "./dist/rtree.js",
   "directories": {
     "example": "examples",
     "test": "tests"
   },
+  "scripts": {
+    "test": "grunt"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/leaflet-extras/RTree.git"
+  },
+  "devDependencies": {
+    "grunt-cli": "~0.1.9",
+    "grunt": "~0.4.1",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-jshint": "~0.6.0",
+    "grunt-simple-mocha": "~0.4.0",
+    "grunt-mocha-phantomjs": "~0.2.8",
+    "grunt-saucelabs": "~4.0.4",
+    "grunt-contrib-connect": "~0.3.0"
   }
 }
