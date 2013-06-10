@@ -70,6 +70,11 @@ module.exports = function(grunt) {
 						{
 							browserName: "chrome",
 							platform: "linux",
+						},
+						{
+							browserName: "firefox",
+							platform: "linux",
+							version: "21"
 						}
 					],
 				urls: [
