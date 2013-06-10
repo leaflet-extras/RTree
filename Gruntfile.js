@@ -87,5 +87,5 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-mocha-phantomjs');
 	grunt.loadNpmTasks('grunt-saucelabs');
 	grunt.registerTask('test', ['connect:server','saucelabs-mocha']);
-	grunt.registerTask('default', ['jshint','concat','uglify']);
+	grunt.registerTask('default', ['jshint','concat','uglify','test']);
 };
