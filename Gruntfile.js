@@ -71,51 +71,50 @@ module.exports = function(grunt) {
 							browserName: "firefox",
 							platform: "linux",
 							version: "21"
-						},
-					{
-						browserName: "safari",
-						platform: "OS X 10.8",
-						version:'6'
-					},{
-						browserName: "safari",
-						platform: "OS X 10.6",
-						version:'5'
-					},{
-						browserName: "iphone",
-						platform: "OS X 10.8",
-						version:'6'
-					},  {
-						browserName: 'chrome',
-						platform: 'linux'
-					}, {
-						browserName: 'internet explorer',
-						platform: 'WIN8',
-						version: '10'
-					}, {
-						browserName: 'opera',
-						platform: 'linux',
-						version: '12'
-					},{
-						browserName: 'opera',
-						platform: 'win7',
-						version: '12'
-					},{
-						browserName: 'internet explorer',
-						platform: 'win7',
-						version: '9'
-					},{
-						browserName: 'internet explorer',
-						platform: 'xp',
-						version: '8'
-					},{
-						browserName: 'internet explorer',
-						platform: 'xp',
-						version: '7'
-					},{
-						browserName: 'internet explorer',
-						platform: 'xp',
-						version: '6'
-					}
+						},{
+							browserName: "safari",
+							platform: "OS X 10.8",
+							version:'6'
+						},{
+							browserName: "safari",
+							platform: "OS X 10.6",
+							version:'5'
+						},{
+							browserName: "iphone",
+							platform: "OS X 10.8",
+							version:'6'
+						},{
+							browserName: 'chrome',
+							platform: 'linux'
+						}, {
+							browserName: 'internet explorer',
+							platform: 'WIN8',
+							version: '10'
+						}, {
+							browserName: 'opera',
+							platform: 'linux',
+							version: '12'
+						},{
+							browserName: 'opera',
+							platform: 'win7',
+							version: '12'
+						},{
+							browserName: 'internet explorer',
+							platform: 'win7',
+							version: '9'
+						}/*,{
+							browserName: 'internet explorer',
+							platform: 'xp',
+							version: '8'
+						},{
+							browserName: 'internet explorer',
+							platform: 'xp',
+							version: '7'
+						},{
+							browserName: 'internet explorer',
+							platform: 'xp',
+							version: '6'
+					}*/
 					],
 				urls: [
 						"http://localhost:8000/tests/index.html"
