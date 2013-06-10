@@ -62,8 +62,8 @@ module.exports = function(grunt) {
 		"saucelabs-mocha":{
 			all:{
 				options:{
-					username:"r_tree",
-					key: "3ec2f89a-0241-4190-8815-0e59c17e6252",
+					username:"rtrees",
+					key: "348b94f0-0bb9-4a45-898f-66c88bec254c",
 					concurrency:3,
 					build: process.env.TRAVIS_JOB_ID,
 					browsers: [
