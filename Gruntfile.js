@@ -45,7 +45,7 @@ module.exports = function(grunt) {
 		connect: {
 			server: {
 				options: {
-					port: 8080,
+					port: 8000,
 					base: '.'
 				}
 			}
@@ -54,7 +54,7 @@ module.exports = function(grunt) {
 			all: {
 				options: {
 					urls: [
-						"http://localhost:8080/tests/index.html"
+						"http://localhost:8000/tests/index.html"
 					]
 				}
 			}
@@ -74,7 +74,7 @@ module.exports = function(grunt) {
 					]
 				},
 				urls: [
-						"http://localhost:8080/tests/index.html"
+						"http://localhost:8000/tests/index.html"
 					]
 			}
 		}
