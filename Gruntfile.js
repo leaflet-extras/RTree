@@ -117,7 +117,8 @@ module.exports = function(grunt) {
 					}*/
 					],
 				urls: [
-						"http://localhost:8000/tests/index.html"
+						"http://localhost:8000/tests/index.html",
+						"http://localhost:8000/tests/min.html"
 					]
 				}
 			}
