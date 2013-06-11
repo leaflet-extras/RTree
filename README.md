@@ -11,11 +11,14 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of 
 - Method for dealing with GeoJSON.
 - All methods now accept callbacks.
 - Query by bbox instead of rectangle. 
+- Submit to NPM.
+- Update examples.
 
 ##Todo:
 
-- Submit to NPM.
-- Update examples.
+- add closure
+- add GruntFile
+- fix syntax (make it pass jslint)
 
 ##API
 

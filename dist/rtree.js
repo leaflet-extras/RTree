@@ -1,3 +1,9 @@
+/****************************************************************************** 
+rtree.js -Non-Recursive Javascript R-Tree Library
+Version 1.0.0, March 15th 2013
+
+https://github.com/leaflet-extras/RTree.
+******************************************************************************/
 /**
  * RTree - A simple r-tree structure for great results.
  * @constructor
