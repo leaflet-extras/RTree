@@ -102,19 +102,7 @@ module.exports = function(grunt) {
 							browserName: 'internet explorer',
 							platform: 'win7',
 							version: '9'
-						}/*,{
-							browserName: 'internet explorer',
-							platform: 'xp',
-							version: '8'
-						},{
-							browserName: 'internet explorer',
-							platform: 'xp',
-							version: '7'
-						},{
-							browserName: 'internet explorer',
-							platform: 'xp',
-							version: '6'
-					}*/
+						}
 					],
 				urls: [
 						"http://localhost:8000/tests/index.html",
