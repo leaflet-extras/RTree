@@ -2,7 +2,6 @@
  * RTree - A simple r-tree structure for great results.
  * @constructor
  */
- var slice=[];
 (function(){
 	/*global module,window,self */
 'use strict';
@@ -83,17 +82,9 @@ var RTree = function(width){
 						// we can cancel search and start walking up the list
 							if('nodes' in ltree) {// If we are deleting a node not a leaf...
 								retArray = searchSubtree(ltree, true, [], ltree);
-								retArray.forEach(function(v){if(typeof v.leaf==="string"){
-									slice.push(parseInt(v.leaf.split('_')[1]));
-								}});
 								tree.nodes.splice(i, 1);
 							} else {
 								retArray = tree.nodes.splice(i, 1);
-								if(typeof retArray[0].leaf==="string"){
-									slice.push(parseInt(retArray[0].leaf.split('_')[1]));
-								}else{
-									slice[2]++;
-								}
 							}
 							// Resize MBR down...
 							RTree.Rectangle.makeMBR(tree.nodes, tree);
@@ -122,7 +113,6 @@ var RTree = function(width){
 				for(var t = 0;t<retObj.nodes.length;t++){
 					insertSubtree(retObj.nodes[t], tree);
 				}
-				console.log(1,retObj.nodes);
 				retObj.nodes = [];
 				if(hitStack.length === 0 && tree.nodes.length <= 1) { // Underflow..on root!
 					retObj.nodes = searchSubtree(tree, true, retObj.nodes, tree);
@@ -434,11 +424,11 @@ var RTree = function(width){
 	 * @public
 	 */
 	this.search = function(rect, returnNode, returnArray, callback) {
-		if(typeof returnNode==="function"){
+		if(typeof returnNode==='function'){
 			callback = returnNode;
 			returnNode=false;
 			returnArray=[];
-		}else if(typeof returnArray==="function"){
+		}else if(typeof returnArray==='function'){
 			callback = returnArray;
 			returnArray=[];
 		}
