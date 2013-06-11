@@ -2,6 +2,7 @@
  * RTree - A simple r-tree structure for great results.
  * @constructor
  */
+ var slice=[];
 (function(){
 	/*global module,window,self */
 'use strict';
@@ -73,55 +74,64 @@ var RTree = function(width){
 			tree = hitStack.pop();
 			i = countStack.pop()-1;
 			if('target' in retObj) { // will this ever be false?
-				while(i >= 0)	{
+				while(i >= 0){
 					ltree = tree.nodes[i];
 					if(RTree.Rectangle.overlapRectangle(retObj, ltree)) {
 						if( (retObj.target && 'leaf' in ltree && ltree.leaf === retObj.target) ||(!retObj.target && ('leaf' in ltree || RTree.Rectangle.containsRectangle(ltree, retObj)))) {
 							// A Match !!
 						// Yup we found a match...
 						// we can cancel search and start walking up the list
-						if('nodes' in ltree) {// If we are deleting a node not a leaf...
-							retArray = searchSubtree(ltree, true, [], ltree);
-							tree.nodes.splice(i, 1);
-						} else {
+							if('nodes' in ltree) {// If we are deleting a node not a leaf...
+								retArray = searchSubtree(ltree, true, [], ltree);
+								retArray.forEach(function(v){if(typeof v.leaf==="string"){
+									slice.push(parseInt(v.leaf.split('_')[1]));
+								}});
+								tree.nodes.splice(i, 1);
+							} else {
 								retArray = tree.nodes.splice(i, 1);
+								if(typeof retArray[0].leaf==="string"){
+									slice.push(parseInt(retArray[0].leaf.split('_')[1]));
+								}else{
+									slice[2]++;
 								}
+							}
 							// Resize MBR down...
 							RTree.Rectangle.makeMBR(tree.nodes, tree);
 							delete retObj.target;
-							if(tree.nodes.length < minWidth) { // Underflow
-								retObj.nodes = searchSubtree(tree, true, [], tree);
-							}
+							//if(tree.nodes.length < minWidth) { // Underflow
+							//	retObj.nodes = searchSubtree(tree, true, [], tree);
+							//}
 							break;
-					}/*	else if('load' in ltree) { // A load
-					}*/	else if('nodes' in ltree) { // Not a Leaf
-						currentDepth += 1;
-						countStack.push(i);
-						hitStack.push(tree);
-						tree = ltree;
-						i = ltree.nodes.length;
+						}else if('nodes' in ltree) { // Not a Leaf
+							currentDepth++;
+							countStack.push(i);
+							hitStack.push(tree);
+							tree = ltree;
+							i = ltree.nodes.length;
+						}
 					}
+					i--;
 				}
-					i -= 1;
-				}
+				
 			} else if('nodes' in retObj) { // We are unsplitting
+			
 				tree.nodes.splice(i+1, 1); // Remove unsplit node
-				// retObj.nodes contains a list of elements removed from the tree so far
 				if(tree.nodes.length > 0){
 					RTree.Rectangle.makeMBR(tree.nodes, tree);
 				}
 				for(var t = 0;t<retObj.nodes.length;t++){
 					insertSubtree(retObj.nodes[t], tree);
 				}
-				retObj.nodes.length = 0;
+				console.log(1,retObj.nodes);
+				retObj.nodes = [];
 				if(hitStack.length === 0 && tree.nodes.length <= 1) { // Underflow..on root!
 					retObj.nodes = searchSubtree(tree, true, retObj.nodes, tree);
-					tree.nodes.length = 0;
+					tree.nodes = [];
 					hitStack.push(tree);
 					countStack.push(1);
 				} else if(hitStack.length > 0 && tree.nodes.length < minWidth) { // Underflow..AGAIN!
 					retObj.nodes = searchSubtree(tree, true, retObj.nodes, tree);
-					tree.nodes.length = 0;
+					tree.nodes = [];
 				}else {
 					delete retObj.nodes; // Just start resizing
 				}
@@ -130,7 +140,7 @@ var RTree = function(width){
 			}
 			currentDepth -= 1;
 		}while(hitStack.length > 0);
-		return(retArray);
+		return retArray;
 	};
 
 	/* choose the best damn node for rectangle to be inserted into
@@ -424,44 +434,19 @@ var RTree = function(width){
 	 * @public
 	 */
 	this.search = function(rect, returnNode, returnArray, callback) {
-		if(arguments.length < 1){
-			throw 'Wrong number of arguments. RT.Search requires at least a bounding rectangle.';
+		if(typeof returnNode==="function"){
+			callback = returnNode;
+			returnNode=false;
+			returnArray=[];
+		}else if(typeof returnArray==="function"){
+			callback = returnArray;
+			returnArray=[];
 		}
-		var args, localCallback,temp,err;
-		switch(arguments.length) {
-			case 1:
-				return searchSubtree.apply(this, [rect, false, [], rootTree]);
-			case 2:
-				if(typeof returnNode === 'function'){
-					args = [rect, false, [], rootTree];
-					localCallback = returnNode;
-					break;
-				}else{
-					return searchSubtree.apply(this, [rect, returnNode, [], rootTree]);
-				}
-				break;
-			case 3:
-				if(typeof returnArray === 'function'){
-					args = [rect, returnNode, [], rootTree];
-					localCallback = returnArray;
-					break;
-				}else{
-					return searchSubtree.apply(this, [rect, returnNode, returnArray, rootTree]);
-				}
-				break;
-			case 4:
-				args = [rect, returnNode, returnArray, rootTree];
-				localCallback = callback;
-				break;
-		}
-		if(localCallback){
-			try{
-				temp = searchSubtree.apply(this,args);
-			}catch(e){
-				err = e;
-			}finally{
-				localCallback(err,temp);
-			}
+		returnArray = returnArray||[];
+		if(callback){
+			callback(null,searchSubtree(rect,returnNode,returnArray,rootTree));
+		}else{
+			return searchSubtree(rect,returnNode,returnArray,rootTree);
 		}
 	};
 		
@@ -552,46 +537,30 @@ var RTree = function(width){
 	 * [ number ] = RTree.remove(rectangle, obj)
 	 */
 	this.remove = function(rect, obj, callback) {
-		var localCallback,args,numberdeleted,retArray;
-		if(arguments.length < 1) {
-			throw 'Wrong number of arguments. RT.remove requires at least a bounding rectangle.';
+		var numberDeleted,retArray,deleted;
+		if(typeof obj==='function'){
+			callback=obj;
+			obj=false;
 		}
-		switch(arguments.length) {
-			case 1:
-				args = [rect,false,rootTree];
-				break;
-			case 2:
-				if(typeof arguments[1]==='function'){
-					localCallback=obj;
-					obj=false;
-				}
-				args = [rect,obj,rootTree];
-				break;
-			case 3:
-				if(typeof callback==='function'){
-					localCallback=callback;
-				}
-				args = [rect,obj,rootTree];
-				break;
-		}
-		if(args[1] === false) { // Do area-wide delete
-			numberdeleted = 0;
+		if(!obj) { // Do area-wide delete
+			numberDeleted = 1;
+			
 			retArray = [];
-			do {
-				numberdeleted=retArray.length;
-				retArray = retArray.concat(removeSubtree.apply(this, args));
-			}while( numberdeleted !==  retArray.length);
-			if(!localCallback){
+			while( numberDeleted > 0) {
+				deleted = removeSubtree(rect,obj,rootTree);
+				numberDeleted = deleted.length;
+				retArray = retArray.concat(deleted);
+			}
+			if(!callback){
 				return retArray;
 			}else{
-				localCallback(null, retArray);
+				callback(null, retArray);
 			}
-		}
-		else { // Delete a specific item
-			if(!localCallback){
-				return(removeSubtree.apply(this, args));
+		}else { // Delete a specific item
+			if(!callback){
+				return(removeSubtree(rect,obj,rootTree));
 			}else{
-				localCallback(null, removeSubtree.apply(this, args));
+				callback(null, removeSubtree(rect,obj,rootTree));
 			}
 		}
 	};
