@@ -1,16 +1,12 @@
 /****************************************************************************** 
-rtree.js -Non-Recursive Javascript R-Tree Library
-Version 1.0.0, March 15th 2013
+			rtree.js -Non-Recursive Javascript R-Tree Library
+			Version 1.0.0, March 15th 2013
 
-https://github.com/leaflet-extras/RTree.
-******************************************************************************/
-/**
- * RTree - A simple r-tree structure for great results.
- * @constructor
- */
-(function(){
-	/*global module,window,self */
-'use strict';
+			https://github.com/leaflet-extras/RTree.
+			******************************************************************************/
+			(function(){
+			/*global module,window,self */
+			'use strict';
 var RTree = function(width){
 	// Variables to control tree-dimensions
 	var minWidth = 3;  // Minimum width of any node before a merge
@@ -585,7 +581,15 @@ var RTree = function(width){
 	/* non-recursive delete function
 	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
-	var bbox = function (ar,obj) {
+
+	
+//End of RTree
+
+
+
+
+
+var bbox = function (ar,obj) {
 		if(obj && obj.bbox){
 			return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
 		}
@@ -778,8 +782,6 @@ var RTree = function(width){
 			this.search({x:x1,y:y1,w:x2-x1,h:y2-y1},callback);
 		}
 	};
-	
-//End of RTree
 };
 var rTree = function(width, callback){
 	var temp,err;
@@ -799,8 +801,6 @@ var rTree = function(width, callback){
 		}
 	}
 };
-/* Rectangle - Generic rectangle object - used! */
-
 RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
 	var x, x2, y, y2, w, h;
 
@@ -922,9 +922,7 @@ RTree.Rectangle.makeMBR = function(nodes, rect) {
 	}
 		
 	return(rect);
-};
-
-if (typeof module !== 'undefined' && module.exports) {
+};if (typeof module !== 'undefined' && module.exports) {
 	module.exports = rTree;
 }else if(typeof document === 'undefined'){
 	self.rTree = rTree;
