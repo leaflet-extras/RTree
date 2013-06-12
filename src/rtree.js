@@ -516,35 +516,30 @@ var RTree = function(width){
 		return(returnString);
 	};
 	
-	/* non-recursive function that deletes a specific
-	 * [ number ] = RTree.remove(rectangle, obj)
+	var removeArea = function(rect,callback){
+		var numberDeleted = 1,
+		retArray = [],
+		deleted;
+		while( numberDeleted > 0) {
+			deleted = removeSubtree(rect,false,rootTree);
+			numberDeleted = deleted.length;
+			retArray = retArray.concat(deleted);
+		}
+			return callback?callback(null, retArray):retArray;
+	};
+	
+	var removeObj=function(rect,obj,callback){
+		var retArray = removeSubtree(rect,obj,rootTree);
+		return callback?callback(null, retArray):retArray;
+	};
+		/* non-recursive delete function
+	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
 	this.remove = function(rect, obj, callback) {
-		var numberDeleted,retArray,deleted;
-		if(typeof obj==='function'){
-			callback=obj;
-			obj=false;
-		}
-		if(!obj) { // Do area-wide delete
-			numberDeleted = 1;
-			
-			retArray = [];
-			while( numberDeleted > 0) {
-				deleted = removeSubtree(rect,obj,rootTree);
-				numberDeleted = deleted.length;
-				retArray = retArray.concat(deleted);
-			}
-			if(!callback){
-				return retArray;
-			}else{
-				callback(null, retArray);
-			}
-		}else { // Delete a specific item
-			if(!callback){
-				return(removeSubtree(rect,obj,rootTree));
-			}else{
-				callback(null, removeSubtree(rect,obj,rootTree));
-			}
+		if(!obj||typeof obj==='function'){
+			return removeArea(rect,obj);
+		}else{
+			return removeObj(rect,obj,callback);
 		}
 	};
 		
@@ -552,26 +547,11 @@ var RTree = function(width){
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
 	this.insert = function(rect, obj, callback) {
-		var temp,err;
-		if(arguments.length < 2) {
-			throw 'Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object.';
-		}
-		if(!callback){
-			return(insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree)||true);
-		}else{
-			try{
-				temp=(insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree));
-			}catch(e){
-				err=e;
-			}finally{
-				callback(err,temp);
-			}
-		}
+		var retArray = insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree);
+		return callback?callback(null, retArray):retArray;
 	};
 	
-	/* non-recursive delete function
-	 * [deleted object] = RTree.remove(rectangle, [object to delete])
-	 */
+
 
 	
 //End of RTree
