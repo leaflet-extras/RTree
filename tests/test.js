@@ -90,15 +90,20 @@ describe('RTree', function () {
 		});
 	});
 	describe('JSON', function(){
-		it('should produce valid json',function(){
-			var rt = new RTree();
+		var rt = new RTree();
 		data[1].forEach(function(v){
 				rt.insert(v[0],v[1]);
 			});
 			data[0].forEach(function(v){
 				rt.insert(v[0],v[1]);
 			});
-			JSON.parse(rt.toJSON());
+		var fromJson;
+		it('should produce valid json',function(){
+			fromJson = rt.toJSON();
+			JSON.parse(fromJson);
+		});
+		it('should work the other way',function(){
+			assert.deepEqual(rt.getTree(),RTree.fromJSON(fromJson).getTree())
 		});
 	});
 	describe('GeoJSON', function(){
