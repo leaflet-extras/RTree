@@ -60,7 +60,7 @@ module.exports = function(grunt) {
 		connect: {
 			server: {
 				options: {
-					port: 8000,
+					port: process.env.PORT||8000,
 					base: '.'
 				}
 			}
@@ -69,7 +69,8 @@ module.exports = function(grunt) {
 			all: {
 				options: {
 					urls: [
-						"http://localhost:8000/tests/index.html"
+						"http://"+process.env.IP+":"+process.env.PORT+"/tests/index.html",
+						"http://"+process.env.IP+":"+process.env.PORT+"/tests/index.html"
 					]
 				}
 			}
@@ -134,6 +135,8 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-connect');
 	grunt.loadNpmTasks('grunt-mocha-phantomjs');
 	grunt.loadNpmTasks('grunt-saucelabs');
+	grunt.registerTask('c9Test', ['connect:server','mocha_phantomjs']);
 	grunt.registerTask('test', ['connect:server','saucelabs-mocha']);
 	grunt.registerTask('default', ['concat','uglify','jshint','test']);
+	grunt.registerTask('c9', ['concat','uglify','jshint','c9Test']);
 };
