@@ -33,7 +33,7 @@ module.exports = function(grunt) {
 					banner: '<%= banner %>',
 					footer:'<%= footer %>'
 				},
-				src: ['src/rtree.js','src/rtree.geojson.js','src/rtree.end.js','src/rtree.rectangle.js'],
+				src: ['src/rtree.js','src/rtree.json.js','src/rtree.geojson.js','src/rtree.end.js','src/rtree.rectangle.js'],
 				dest: 'dist/rtree.js'
 			}
 		},
