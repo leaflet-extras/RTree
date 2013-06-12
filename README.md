@@ -2,6 +2,8 @@
 
 A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of [Jon-Carlos Rivera's fantastic library](https://github.com/imbcmdth/RTree) which sadly seems not to be maintained. MIT Licensed. 
 
+[![Selenium Test Status](https://saucelabs.com/browser-matrix/rtrees.svg)](https://saucelabs.com/u/rtrees)
+
 ##So far:
 
 - Bugfix when deleting points.
@@ -13,12 +15,14 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of 
 - Query by bbox instead of rectangle. 
 - Submit to NPM.
 - Update examples.
-
-##Todo:
-
 - add closure
 - add GruntFile
 - fix syntax (make it pass jslint)
+
+##todo
+
+- more modular
+- that bug!
 
 ##API
 
