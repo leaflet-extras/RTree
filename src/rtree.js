@@ -10,26 +10,6 @@ var RTree = function(width){
 		return Array.isArray?Array.isArray(o):Object.prototype.toString.call(o) === '[object Array]';
 	};
 
-	/* @function
-	 * @description Function to generate unique strings for element IDs
-	 * @param {String} n			The prefix to use for the IDs generated.
-	 * @return {String}				A guarenteed unique ID.
-	 */
-	var nameToId = (function() {
-		// hide our idCache inside this closure
-		var idCache = {};
-
-		// return the api: our function that returns a unique string with incrementing number appended to given idPrefix
-		return function(idPrefix) {
-			var idVal = 0;
-			if(idPrefix in idCache) {
-				idVal = idCache[idPrefix]++;
-			} else {
-				idCache[idPrefix] = 0;
-			}
-			return idPrefix + '_' + idVal;
-		};
-	})();
 
 	// This is my special addition to the world of r-trees
 	// every other (simple) method I found produced crap trees
@@ -409,7 +389,7 @@ var RTree = function(width){
 		if(!where){
 			where = rootTree;
 		}
-		return(attachData(where, newTree));
+		return attachData(where, newTree);
 	};
 	
 	/* non-recursive search function
