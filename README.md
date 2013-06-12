@@ -22,7 +22,7 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of 
 ##todo
 
 - more modular
-- that bug!
+- that bug with deleting
 
 ##API
 
