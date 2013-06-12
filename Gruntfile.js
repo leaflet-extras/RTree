@@ -84,6 +84,11 @@ module.exports = function(grunt) {
 					build: process.env.TRAVIS_JOB_ID,
 					browsers: [
 						{
+							browserName: 'internet explorer',
+							platform: 'win7',
+							version: '9'
+						},
+						{
 							browserName: "firefox",
 							platform: "linux",
 							version: "21"
@@ -114,10 +119,6 @@ module.exports = function(grunt) {
 							browserName: 'opera',
 							platform: 'win7',
 							version: '12'
-						},{
-							browserName: 'internet explorer',
-							platform: 'win7',
-							version: '9'
 						}
 					],
 				urls: [
