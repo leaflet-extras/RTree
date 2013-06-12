@@ -7,7 +7,7 @@ var RTree = function(width){
 	var rootTree = {x:0, y:0, w:0, h:0, id:'root', nodes:[] };
 	
 	var isArray = function(o) {
-		return Object.prototype.toString.call(o) === '[object Array]';
+		return Array.isArray?Array.isArray(o):Object.prototype.toString.call(o) === '[object Array]';
 	};
 
 	/* @function
