@@ -107,7 +107,7 @@ module.exports = function(grunt) {
 						},{
 							browserName: 'chrome',
 							platform: 'linux'
-						}, {
+						},{
 							browserName: 'internet explorer',
 							platform: 'WIN8',
 							version: '10'
