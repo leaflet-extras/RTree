@@ -35,28 +35,6 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 		return this;
 	};
 	
-	this.setRect = function(ix, iy, iw, ih) {
-		var x, x2, y, y2, w, h;
-		if(ix.x) {
-			x = ix.x;
-			y = ix.y;
-			if(ix.w !== 0 && !ix.w && ix.x2) {
-				w = ix.x2-ix.x;
-				h = ix.y2-ix.y;
-			}	else {
-				w = ix.w;
-				h = ix.h;
-			}
-			x2 = x + w; y2 = y + h; // For extra fastitude
-		} else {
-			x = ix;
-			y = iy;
-			w = iw;
-			h = ih;
-			x2 = x + w;
-			y2 = y + h; // For extra fastitude
-		}
-	};
 //End of RTree.Rectangle
 };
 
@@ -66,6 +44,7 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
  * @static function
  */
 RTree.Rectangle.overlapRectangle = function(a, b) {
+	//if(!((a.h||a.w)&&(b.h||b.w))){ not faster resist the urge!
 	if((a.h===0&&a.w===0)||(b.h===0&&b.w===0)){
 		return a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y;
 	}else{
