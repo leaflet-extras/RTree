@@ -141,7 +141,7 @@ myRTree.geoJSON({
 ###Parameters
 
 -  **area** : **required** : Area to search, this can either be represented by a single parameter bounds array `[[x1,y1],[x2,y2]]`, two parameters representing the southwest and northeast corners `[x1,y1],[x2,y2]`, or 4 parameters of `[x1,y1,x2,y2]`.  
-- **callback** : _optional_ : Function called with the results<sup>2</sup>](#f2).
+- **callback** : _optional_ : Function called with the results.[<sup>2</sup>](#f2).
 
 ###Returns:
 
@@ -165,7 +165,7 @@ myRTree.geoJSON({
 -  **area** : **required** : An area to search within.
 -  **return_node** : _optional_ : Whether to return the entire node, mainly internal option.
 -  **return_array** : _optional_ : An existing array to add the results to, defaults to [], mainly internal option.
-- **callback** : _optional_ : Function called with the results<sup>2</sup>](#f2).
+- **callback** : _optional_ : Function called with the results[<sup>2</sup>](#f2).
 
 ###Returns: 
 
