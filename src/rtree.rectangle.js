@@ -4,14 +4,23 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 	if(ix.x) {
 		x = ix.x; y = ix.y;
 			if(ix.w !== 0 && !ix.w && ix.x2){
-				w = ix.x2-ix.x;	h = ix.y2-ix.y;
-			}	else {
-				w = ix.w;	h = ix.h;
+				w = ix.x2-ix.x;
+				h = ix.y2-ix.y;
+			} else {
+				w = ix.w;
+				h = ix.h;
 			}
-		x2 = x + w; y2 = y + h; // For extra fastitude
+		// For extra fastitude
+		x2 = x + w;
+		y2 = y + h;
 	} else {
-		x = ix; y = iy;	w = iw;	h = ih;
-		x2 = x + w; y2 = y + h; // For extra fastitude
+		x = ix;
+		y = iy;
+		w = iw;
+		h = ih;
+		// For extra fastitude
+		x2 = x + w;
+		y2 = y + h;
 	}
 
 	this.x1 = this.x = function(){return x;};
@@ -23,15 +32,37 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 	
 	
 	this.overlap = function(a) {
-		return this.x() < a.x2() && this.x2() > a.x() && this.y() < a.y2() && this.y2() > a.y();
+		return x < a.x2() && x2 > a.x() && y < a.y2() && y2 > a.y();
 	};
 	
 	this.expand = function(a) {
-		var nx = Math.min(this.x(), a.x());
-		var ny = Math.min(this.y(), a.y());
-		w = Math.max(this.x2(), a.x2()) - nx;
-		h = Math.max(this.y2(), a.y2()) - ny;
-		x = nx; y = ny;
+		var nx,ny;
+		var ax = a.x();
+		var ay = a.y();
+		var ax2 = a.x2();
+		var ay2 = a.y2();
+		if(x>ax) {
+			nx = ax;
+		} else {
+			nx = x;
+		}
+		if(y>ay) {
+			ny = ay;
+		} else {
+			ny = y;
+		}
+		if(x2>ax2){
+			w = x2 - nx;
+		} else {
+			w = ax2 - nx;
+		}
+		if(y2>ay2){
+			h = y2 - ny;
+		} else {
+			h = ay2 - ny;
+		}
+		x = nx;
+		y = ny;
 		return this;
 	};
 	
