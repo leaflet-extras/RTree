@@ -121,9 +121,9 @@ RTree.Rectangle.expandRectangle = function(a, b)	{
 			a.w = bxw-nx;
 	}
 	if(ayh > byh) {
-		a.h = ayh;
+		a.h = ayh -ny;
 	} else {
-		a.h = byh;
+		a.h = byh - ny;
 	}
 	a.x = nx;
 	a.y = ny;
