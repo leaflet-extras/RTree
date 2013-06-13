@@ -21,12 +21,9 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 	this.w = function(){return w;};
 	this.h = function(){return h;};
 	
-	this.toJSON = function() {
-		return('{"x":'+x.toString()+', "y":'+y.toString()+', "w":'+w.toString()+', "h":'+h.toString()+'}');
-	};
 	
 	this.overlap = function(a) {
-		return(this.x() < a.x2() && this.x2() > a.x() && this.y() < a.y2() && this.y2() > a.y());
+		return this.x() < a.x2() && this.x2() > a.x() && this.y() < a.y2() && this.y2() > a.y();
 	};
 	
 	this.expand = function(a) {
@@ -35,7 +32,7 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 		w = Math.max(this.x2(), a.x2()) - nx;
 		h = Math.max(this.y2(), a.y2()) - ny;
 		x = nx; y = ny;
-		return(this);
+		return this;
 	};
 	
 	this.setRect = function(ix, iy, iw, ih) {
@@ -70,9 +67,9 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
  */
 RTree.Rectangle.overlapRectangle = function(a, b) {
 	if((a.h===0&&a.w===0)||(b.h===0&&b.w===0)){
-		return(a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y);
+		return a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y;
 	}else{
-		return(a.x < (b.x+b.w) && (a.x+a.w) > b.x && a.y < (b.y+b.h) && (a.y+a.h) > b.y);
+		return a.x < (b.x+b.w) && (a.x+a.w) > b.x && a.y < (b.y+b.h) && (a.y+a.h) > b.y;
 	}
 };
 
@@ -81,7 +78,7 @@ RTree.Rectangle.overlapRectangle = function(a, b) {
  * @static function
  */
 RTree.Rectangle.containsRectangle = function(a, b) {
-	return((a.x+a.w) <= (b.x+b.w) && a.x >= b.x && (a.y+a.h) <= (b.y+b.h) && a.y >= b.y);
+	return (a.x+a.w) <= (b.x+b.w) && a.x >= b.x && (a.y+a.h) <= (b.y+b.h) && a.y >= b.y;
 };
 
 /* expands rectangle A to include rectangle B, rectangle B is untouched
@@ -94,7 +91,7 @@ RTree.Rectangle.expandRectangle = function(a, b)	{
 	a.w = Math.max(a.x+a.w, b.x+b.w) - nx;
 	a.h = Math.max(a.y+a.h, b.y+b.h) - ny;
 	a.x = nx; a.y = ny;
-	return(a);
+	return a;
 };
 
 /* generates a minimally bounding rectangle for all rectangles in
@@ -105,7 +102,7 @@ RTree.Rectangle.expandRectangle = function(a, b)	{
  */
 RTree.Rectangle.makeMBR = function(nodes, rect) {
 	if(nodes.length < 1){
-		return({x:0, y:0, w:0, h:0});
+		return {x:0, y:0, w:0, h:0};
 	}
 		//throw 'makeMBR: nodes must contain at least one rectangle!';
 	if(!rect){
@@ -118,5 +115,5 @@ RTree.Rectangle.makeMBR = function(nodes, rect) {
 		RTree.Rectangle.expandRectangle(rect, nodes[i]);
 	}
 		
-	return(rect);
+	return rect;
 };

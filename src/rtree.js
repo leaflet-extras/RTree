@@ -22,7 +22,7 @@ var RTree = function(width){
 		// the more 'square' a rectangle is. conversly, when approaching zero the
 		// more elongated a rectangle is
 		var lgeo = larea / (lperi*lperi);
-		return(larea * fill / lgeo);
+		return  larea * fill / lgeo;
 	};
 	
 	/* find the best specific node(s) for object to be deleted from
@@ -150,7 +150,7 @@ var RTree = function(width){
 			}
 		}
 
-		return(bestChoiceStack);
+		return bestChoiceStack;
 	};
 
 	/* split a set of nodes into two roughly equally-filled nodes
@@ -162,7 +162,7 @@ var RTree = function(width){
 		while(nodes.length > 0)	{
 			pickNext(nodes, n[0], n[1]);
 		}
-		return(n);
+		return n;
 	};
 	
 	/* insert the best source rectangle into the best fitting parent node: a or b
@@ -252,15 +252,17 @@ var RTree = function(width){
 				t1 = nodes.splice(lowestHighY, 1)[0];
 			}
 		}
-		return([{x:t1.x, y:t1.y, w:t1.w, h:t1.h, nodes:[t1]},
-					{x:t2.x, y:t2.y, w:t2.w, h:t2.h, nodes:[t2]} ]);
+		return [
+			{x:t1.x, y:t1.y, w:t1.w, h:t1.h, nodes:[t1]},
+			{x:t2.x, y:t2.y, w:t2.w, h:t2.h, nodes:[t2]}
+		];
 	};
 	
 	var attachData = function(node, moreTree){
 		node.nodes = moreTree.nodes;
 		node.x = moreTree.x; node.y = moreTree.y;
 		node.w = moreTree.w; node.h = moreTree.h;
-		return(node);
+		return node;
 	};
 
 	/* non-recursive internal search function
@@ -271,7 +273,7 @@ var RTree = function(width){
 		var hitStack = []; // Contains the elements that overlap
 	
 		if(!RTree.Rectangle.overlapRectangle(rect, root)){
-			return(returnArray);
+			return returnArray;
 		}
 	
 	
@@ -296,7 +298,7 @@ var RTree = function(width){
 			}
 		}
 		
-		return(returnArray);
+		return returnArray;
 	};
 	
 	/* non-recursive internal insert function
