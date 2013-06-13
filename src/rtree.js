@@ -42,7 +42,7 @@ var RTree = function(width){
 		
 		countStack.push(root.nodes.length);
 		hitStack.push(root);
-		do {
+		while(hitStack.length > 0) {
 			tree = hitStack.pop();
 			i = countStack.pop()-1;
 			if('target' in retObj) { // will this ever be false?
@@ -102,7 +102,7 @@ var RTree = function(width){
 				RTree.Rectangle.makeMBR(tree.nodes, tree);
 			}
 			currentDepth -= 1;
-		}while(hitStack.length > 0);
+		}
 		return retArray;
 	};
 
