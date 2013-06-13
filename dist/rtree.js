@@ -1,16 +1,12 @@
 /****************************************************************************** 
-rtree.js -Non-Recursive Javascript R-Tree Library
-Version 1.0.0, March 15th 2013
+			rtree.js -Non-Recursive Javascript R-Tree Library
+			Version 1.0.0, March 15th 2013
 
-https://github.com/leaflet-extras/RTree.
-******************************************************************************/
-/**
- * RTree - A simple r-tree structure for great results.
- * @constructor
- */
-(function(){
-	/*global module,window,self */
-'use strict';
+			https://github.com/leaflet-extras/RTree.
+			******************************************************************************/
+			(function(){
+			/*global module,window,self */
+			'use strict';
 var RTree = function(width){
 	// Variables to control tree-dimensions
 	var minWidth = 3;  // Minimum width of any node before a merge
@@ -20,29 +16,9 @@ var RTree = function(width){
 	var rootTree = {x:0, y:0, w:0, h:0, id:'root', nodes:[] };
 	
 	var isArray = function(o) {
-		return Object.prototype.toString.call(o) === '[object Array]';
+		return Array.isArray?Array.isArray(o):Object.prototype.toString.call(o) === '[object Array]';
 	};
 
-	/* @function
-	 * @description Function to generate unique strings for element IDs
-	 * @param {String} n			The prefix to use for the IDs generated.
-	 * @return {String}				A guarenteed unique ID.
-	 */
-	var nameToId = (function() {
-		// hide our idCache inside this closure
-		var idCache = {};
-
-		// return the api: our function that returns a unique string with incrementing number appended to given idPrefix
-		return function(idPrefix) {
-			var idVal = 0;
-			if(idPrefix in idCache) {
-				idVal = idCache[idPrefix]++;
-			} else {
-				idCache[idPrefix] = 0;
-			}
-			return idPrefix + '_' + idVal;
-		};
-	})();
 
 	// This is my special addition to the world of r-trees
 	// every other (simple) method I found produced crap trees
@@ -55,9 +31,23 @@ var RTree = function(width){
 		// the more 'square' a rectangle is. conversly, when approaching zero the
 		// more elongated a rectangle is
 		var lgeo = larea / (lperi*lperi);
-		return(larea * fill / lgeo);
+		return  larea * fill / lgeo;
 	};
 	
+	var flatten = function(tree){
+		var todo = tree.slice();
+		var done = [];
+		var current;
+		while(todo.length){
+			current = todo.pop();
+			if(current.nodes){
+				todo=todo.concat(current.nodes);
+			} else if (current.leaf) {
+				done.push(current);
+			}
+		}
+		return done;
+	};
 	/* find the best specific node(s) for object to be deleted from
 	 * [ leaf node parent ] = removeSubtree(rectangle, object, root)
 	 * @private
@@ -75,7 +65,7 @@ var RTree = function(width){
 		
 		countStack.push(root.nodes.length);
 		hitStack.push(root);
-		do {
+		while(hitStack.length > 0) {
 			tree = hitStack.pop();
 			i = countStack.pop()-1;
 			if('target' in retObj) { // will this ever be false?
@@ -87,8 +77,7 @@ var RTree = function(width){
 						// Yup we found a match...
 						// we can cancel search and start walking up the list
 							if('nodes' in ltree) {// If we are deleting a node not a leaf...
-								retArray = searchSubtree(ltree, true, [], ltree);
-								tree.nodes.splice(i, 1);
+								retArray = flatten(tree.nodes.splice(i, 1));
 							} else {
 								retArray = tree.nodes.splice(i, 1);
 							}
@@ -135,7 +124,7 @@ var RTree = function(width){
 				RTree.Rectangle.makeMBR(tree.nodes, tree);
 			}
 			currentDepth -= 1;
-		}while(hitStack.length > 0);
+		}
 		return retArray;
 	};
 
@@ -147,12 +136,14 @@ var RTree = function(width){
 		var bestChoiceIndex = -1;
 		var bestChoiceStack = [];
 		var bestChoiceArea;
-	
+		var first=true;
 		bestChoiceStack.push(root);
 		var nodes = root.nodes;
 
-		do {
-			if(bestChoiceIndex !== -1)	{
+		while(first || bestChoiceIndex !== -1) {
+			if(first) {
+				first = false;
+			} else {
 				bestChoiceStack.push(nodes[bestChoiceIndex]);
 				nodes = nodes[bestChoiceIndex].nodes;
 				bestChoiceIndex = -1;
@@ -179,9 +170,9 @@ var RTree = function(width){
 					bestChoiceArea = Math.abs(lratio - oldLRatio); bestChoiceIndex = i;
 				}
 			}
-		}while(bestChoiceIndex !== -1);
+		}
 
-		return(bestChoiceStack);
+		return bestChoiceStack;
 	};
 
 	/* split a set of nodes into two roughly equally-filled nodes
@@ -193,7 +184,7 @@ var RTree = function(width){
 		while(nodes.length > 0)	{
 			pickNext(nodes, n[0], n[1]);
 		}
-		return(n);
+		return n;
 	};
 	
 	/* insert the best source rectangle into the best fitting parent node: a or b
@@ -239,7 +230,7 @@ var RTree = function(width){
 			RTree.Rectangle.expandRectangle(lowestGrowthGroup, tempNode);
 		}
 	};
-
+	
 	/* pick the 'best' two starter nodes to use as seeds using the 'linear' criteria
 	 * [ an array of two new arrays of nodes ] = pickLinear(array of source nodes)
 	 * @private
@@ -283,15 +274,17 @@ var RTree = function(width){
 				t1 = nodes.splice(lowestHighY, 1)[0];
 			}
 		}
-		return([{x:t1.x, y:t1.y, w:t1.w, h:t1.h, nodes:[t1]},
-					{x:t2.x, y:t2.y, w:t2.w, h:t2.h, nodes:[t2]} ]);
+		return [
+			{x:t1.x, y:t1.y, w:t1.w, h:t1.h, nodes:[t1]},
+			{x:t2.x, y:t2.y, w:t2.w, h:t2.h, nodes:[t2]}
+		];
 	};
 	
 	var attachData = function(node, moreTree){
 		node.nodes = moreTree.nodes;
 		node.x = moreTree.x; node.y = moreTree.y;
 		node.w = moreTree.w; node.h = moreTree.h;
-		return(node);
+		return node;
 	};
 
 	/* non-recursive internal search function
@@ -302,13 +295,13 @@ var RTree = function(width){
 		var hitStack = []; // Contains the elements that overlap
 	
 		if(!RTree.Rectangle.overlapRectangle(rect, root)){
-			return(returnArray);
+			return returnArray;
 		}
 	
 	
 		hitStack.push(root.nodes);
 	
-		do {
+		while(hitStack.length > 0){
 			var nodes = hitStack.pop();
 	
 			for(var i = nodes.length-1; i >= 0; i--) {
@@ -325,9 +318,9 @@ var RTree = function(width){
 					}
 				}
 			}
-		}while(hitStack.length > 0);
+		}
 		
-		return(returnArray);
+		return returnArray;
 	};
 	
 	/* non-recursive internal insert function
@@ -352,7 +345,7 @@ var RTree = function(width){
 		var retObj = node;//{x:rect.x,y:rect.y,w:rect.w,h:rect.h, leaf:obj};
 		var pbc;
 		// Walk back up the tree resizing and inserting as needed
-		do {
+		while(treeStack.length > 0) {
 			//handle the case of an empty node (from a split)
 			if(bc && 'nodes' in bc && bc.nodes.length === 0) {
 				pbc = bc; // Past bc
@@ -396,12 +389,12 @@ var RTree = function(width){
 						delete bc;
 					}*/
 				}
-			}	else { // Otherwise Do Resize
+			} else { // Otherwise Do Resize
 				//Just keep applying the new bounding rectangle to the parents..
 				RTree.Rectangle.expandRectangle(bc, retObj);
 				retObj = {x:bc.x,y:bc.y,w:bc.w,h:bc.h};
 			}
-		} while(treeStack.length > 0);
+		}
 	};
 
 	/* quick 'n' dirty function for plugins or manually drawing the tree
@@ -422,7 +415,7 @@ var RTree = function(width){
 		if(!where){
 			where = rootTree;
 		}
-		return(attachData(where, newTree));
+		return attachData(where, newTree);
 	};
 	
 	/* non-recursive search function
@@ -446,118 +439,31 @@ var RTree = function(width){
 		}
 	};
 		
-	/* partially-recursive toJSON function
-	 * [ string ] = RTree.toJSON([rectangle], [tree])
-	 * @public
-	 */
-	this.toJSON = function(rect, tree) {
-		var hitStack = []; // Contains the elements that overlap
-		var countStack = []; // Contains the elements that overlap
-		var returnStack = {}; // Contains the elements that overlap
-		var maxDepth = 3;  // This triggers recursion and tree-splitting
-		var currentDepth = 1;
-		var returnString = '';
-		
-		if(rect && !RTree.Rectangle.overlapRectangle(rect, rootTree)){
-			return '';
-		}
-		
-		if(!tree)	{
-			countStack.push(rootTree.nodes.length);
-			hitStack.push(rootTree.nodes);
-			returnString += 'var mainTree = {x:'+rootTree.x.toFixed()+',y:'+rootTree.y.toFixed()+',w:'+rootTree.w.toFixed()+',h:'+rootTree.h.toFixed()+',nodes:[';
-		}	else {
-			maxDepth += 4;
-			countStack.push(tree.nodes.length);
-			hitStack.push(tree.nodes);
-			returnString += 'var mainTree = {x:'+tree.x.toFixed()+',y:'+tree.y.toFixed()+',w:'+tree.w.toFixed()+',h:'+tree.h.toFixed()+',nodes:[';
-		}
 	
-		do {
-			var nodes = hitStack.pop();
-			var i = countStack.pop()-1;
-			
-			if(i >= 0 && i < nodes.length-1){
-				returnString += ',';
-			}
-				
-			while(i >= 0){
-				var ltree = nodes[i];
-			if(!rect || RTree.Rectangle.overlapRectangle(rect, ltree)) {
-				if(ltree.nodes) { // Not a Leaf
-					if(currentDepth >= maxDepth) {
-						//var len = returnStack.length;
-						var nam = nameToId('savedSubtree');
-						returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',load:"'+nam+'.js"}';
-						returnStack[nam] = this.toJSON(rect, ltree);
-							if(i > 0){
-								returnString += ',';
-							}
-					}	else {
-						returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',nodes:[';
-						currentDepth += 1;
-						countStack.push(i);
-						hitStack.push(nodes);
-						nodes = ltree.nodes;
-						i = ltree.nodes.length;
-					}
-				}	else if(ltree.leaf) { // A Leaf !!
-					var data = ltree.leaf.toJSON ? ltree.leaf.toJSON() : JSON.stringify(ltree.leaf);
-					returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',leaf:' + data + '}';
-						if(i > 0){
-							returnString += ',';
-						}
-				}	else if(ltree.load) { // A load
-					returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',load:"' + ltree.load + '"}';
-						if(i > 0){
-							returnString += ',';
-						}
-				}
-				}
-				i -= 1;
-			}
-			if(i < 0)	{
-					returnString += ']}'; currentDepth -= 1;
-			}
-		}while(hitStack.length > 0);
-		
-		returnString+=';';
-		
-		for(var myKey in returnStack) {
-			returnString += '\nvar ' + myKey + ' = function(){' + returnStack[myKey] + ' return(mainTree);};';
+	var removeArea = function(rect,callback){
+		var numberDeleted = 1,
+		retArray = [],
+		deleted;
+		while( numberDeleted > 0) {
+			deleted = removeSubtree(rect,false,rootTree);
+			numberDeleted = deleted.length;
+			retArray = retArray.concat(deleted);
 		}
-		return(returnString);
+			return callback?callback(null, retArray):retArray;
 	};
 	
-	/* non-recursive function that deletes a specific
-	 * [ number ] = RTree.remove(rectangle, obj)
+	var removeObj=function(rect,obj,callback){
+		var retArray = removeSubtree(rect,obj,rootTree);
+		return callback?callback(null, retArray):retArray;
+	};
+		/* non-recursive delete function
+	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
 	this.remove = function(rect, obj, callback) {
-		var numberDeleted,retArray,deleted;
-		if(typeof obj==='function'){
-			callback=obj;
-			obj=false;
-		}
-		if(!obj) { // Do area-wide delete
-			numberDeleted = 1;
-			
-			retArray = [];
-			while( numberDeleted > 0) {
-				deleted = removeSubtree(rect,obj,rootTree);
-				numberDeleted = deleted.length;
-				retArray = retArray.concat(deleted);
-			}
-			if(!callback){
-				return retArray;
-			}else{
-				callback(null, retArray);
-			}
-		}else { // Delete a specific item
-			if(!callback){
-				return(removeSubtree(rect,obj,rootTree));
-			}else{
-				callback(null, removeSubtree(rect,obj,rootTree));
-			}
+		if(!obj||typeof obj==='function'){
+			return removeArea(rect,obj);
+		}else{
+			return removeObj(rect,obj,callback);
 		}
 	};
 		
@@ -565,27 +471,35 @@ var RTree = function(width){
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
 	this.insert = function(rect, obj, callback) {
-		var temp,err;
-		if(arguments.length < 2) {
-			throw 'Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object.';
-		}
-		if(!callback){
-			return(insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree)||true);
-		}else{
-			try{
-				temp=(insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree));
-			}catch(e){
-				err=e;
-			}finally{
-				callback(err,temp);
-			}
-		}
+		var retArray = insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree);
+		return callback?callback(null, retArray):retArray;
 	};
 	
-	/* non-recursive delete function
-	 * [deleted object] = RTree.remove(rectangle, [object to delete])
+
+
+	
+//End of RTree
+
+
+
+
+
+/* partially-recursive toJSON function
+	 * [ string ] = RTree.toJSON(callback)
+	 * @public
 	 */
-	var bbox = function (ar,obj) {
+	this.toJSON = function(rect, callback) {
+		callback = callback||function(err,data){return data;};
+		return callback(null,JSON.stringify(rootTree));
+	};
+	
+	RTree.fromJSON = function(json, callback) {
+		callback = callback ||function(err,data){return data;};
+		var rt = new RTree();
+		rt.setTree(JSON.parse(json));
+		return callback(null, rt);
+	};
+var bbox = function (ar,obj) {
 		if(obj && obj.bbox){
 			return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
 		}
@@ -778,8 +692,6 @@ var RTree = function(width){
 			this.search({x:x1,y:y1,w:x2-x1,h:y2-y1},callback);
 		}
 	};
-	
-//End of RTree
 };
 var rTree = function(width, callback){
 	var temp,err;
@@ -799,22 +711,30 @@ var rTree = function(width, callback){
 		}
 	}
 };
-/* Rectangle - Generic rectangle object - used! */
+RTree.Rectangle = function(x, y, w, h) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
+	var x2, y2, p;
 
-RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
-	var x, x2, y, y2, w, h;
-
-	if(ix.x) {
-		x = ix.x; y = ix.y;
-			if(ix.w !== 0 && !ix.w && ix.x2){
-				w = ix.x2-ix.x;	h = ix.y2-ix.y;
-			}	else {
-				w = ix.w;	h = ix.h;
-			}
-		x2 = x + w; y2 = y + h; // For extra fastitude
+	if(x.x) {
+		w = x.w;
+		h = x.h;
+		y = x.y;
+		if(x.w !== 0 && !x.w && x.x2){
+			w = x.x2-x.x;
+			h = x.y2-x.y;
+		} else {
+			w = x.w;
+			h = x.h;
+		}
+		x = x.x;
+		// For extra fastitude
+		x2 = x + w;
+		y2 = y + h;
+		p = (h+w)?false:true;
 	} else {
-		x = ix; y = iy;	w = iw;	h = ih;
-		x2 = x + w; y2 = y + h; // For extra fastitude
+		// For extra fastitude
+		x2 = x + w;
+		y2 = y + h;
+		p = (h+w)?false:true;
 	}
 
 	this.x1 = this.x = function(){return x;};
@@ -823,46 +743,46 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 	this.y2 = function(){return y2;};
 	this.w = function(){return w;};
 	this.h = function(){return h;};
-	
-	this.toJSON = function() {
-		return('{"x":'+x.toString()+', "y":'+y.toString()+', "w":'+w.toString()+', "h":'+h.toString()+'}');
-	};
+	this.p = function(){return p;};
 	
 	this.overlap = function(a) {
-		return(this.x() < a.x2() && this.x2() > a.x() && this.y() < a.y2() && this.y2() > a.y());
+		if(p||a.p()){
+			return x <= a.x2() && x2 >= a.x() && y <= a.y2() && y2 >= a.y();
+		}
+		return x < a.x2() && x2 > a.x() && y < a.y2() && y2 > a.y();
 	};
 	
 	this.expand = function(a) {
-		var nx = Math.min(this.x(), a.x());
-		var ny = Math.min(this.y(), a.y());
-		w = Math.max(this.x2(), a.x2()) - nx;
-		h = Math.max(this.y2(), a.y2()) - ny;
-		x = nx; y = ny;
-		return(this);
+		var nx,ny;
+		var ax = a.x();
+		var ay = a.y();
+		var ax2 = a.x2();
+		var ay2 = a.y2();
+		if(x>ax) {
+			nx = ax;
+		} else {
+			nx = x;
+		}
+		if(y>ay) {
+			ny = ay;
+		} else {
+			ny = y;
+		}
+		if(x2>ax2){
+			w = x2 - nx;
+		} else {
+			w = ax2 - nx;
+		}
+		if(y2>ay2){
+			h = y2 - ny;
+		} else {
+			h = ay2 - ny;
+		}
+		x = nx;
+		y = ny;
+		return this;
 	};
 	
-	this.setRect = function(ix, iy, iw, ih) {
-		var x, x2, y, y2, w, h;
-		if(ix.x) {
-			x = ix.x;
-			y = ix.y;
-			if(ix.w !== 0 && !ix.w && ix.x2) {
-				w = ix.x2-ix.x;
-				h = ix.y2-ix.y;
-			}	else {
-				w = ix.w;
-				h = ix.h;
-			}
-			x2 = x + w; y2 = y + h; // For extra fastitude
-		} else {
-			x = ix;
-			y = iy;
-			w = iw;
-			h = ih;
-			x2 = x + w;
-			y2 = y + h; // For extra fastitude
-		}
-	};
 //End of RTree.Rectangle
 };
 
@@ -872,10 +792,11 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
  * @static function
  */
 RTree.Rectangle.overlapRectangle = function(a, b) {
+	//if(!((a.h||a.w)&&(b.h||b.w))){ not faster resist the urge!
 	if((a.h===0&&a.w===0)||(b.h===0&&b.w===0)){
-		return(a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y);
+		return a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y;
 	}else{
-		return(a.x < (b.x+b.w) && (a.x+a.w) > b.x && a.y < (b.y+b.h) && (a.y+a.h) > b.y);
+		return a.x < (b.x+b.w) && (a.x+a.w) > b.x && a.y < (b.y+b.h) && (a.y+a.h) > b.y;
 	}
 };
 
@@ -884,7 +805,7 @@ RTree.Rectangle.overlapRectangle = function(a, b) {
  * @static function
  */
 RTree.Rectangle.containsRectangle = function(a, b) {
-	return((a.x+a.w) <= (b.x+b.w) && a.x >= b.x && (a.y+a.h) <= (b.y+b.h) && a.y >= b.y);
+	return (a.x+a.w) <= (b.x+b.w) && a.x >= b.x && (a.y+a.h) <= (b.y+b.h) && a.y >= b.y;
 };
 
 /* expands rectangle A to include rectangle B, rectangle B is untouched
@@ -892,12 +813,34 @@ RTree.Rectangle.containsRectangle = function(a, b) {
  * @static function
  */
 RTree.Rectangle.expandRectangle = function(a, b)	{
-	var nx = Math.min(a.x, b.x);
-	var ny = Math.min(a.y, b.y);
-	a.w = Math.max(a.x+a.w, b.x+b.w) - nx;
-	a.h = Math.max(a.y+a.h, b.y+b.h) - ny;
-	a.x = nx; a.y = ny;
-	return(a);
+	var nx,ny;
+	var axw = a.x+a.w;
+	var bxw = b.x+b.w;
+	var ayh = a.y+a.h;
+	var byh = b.y+b.h;
+	if(a.x > b.x) {
+		nx=b.x;
+	} else {
+		nx=a.x;
+	}
+	if(a.y > b.y) {
+		ny=b.y;
+	} else {
+		ny=a.y;
+	}
+	if(axw > bxw) {
+		a.w = axw-nx;
+	} else {
+			a.w = bxw-nx;
+	}
+	if(ayh > byh) {
+		a.h = ayh -ny;
+	} else {
+		a.h = byh - ny;
+	}
+	a.x = nx;
+	a.y = ny;
+	return a;
 };
 
 /* generates a minimally bounding rectangle for all rectangles in
@@ -907,24 +850,26 @@ RTree.Rectangle.expandRectangle = function(a, b)	{
  * @static function
  */
 RTree.Rectangle.makeMBR = function(nodes, rect) {
-	if(nodes.length < 1){
-		return({x:0, y:0, w:0, h:0});
+	if(!nodes.length){
+		return {
+			x : 0,
+			y : 0,
+			w : 0,
+			h : 0
+		};
 	}
-		//throw 'makeMBR: nodes must contain at least one rectangle!';
-	if(!rect){
-		rect = {x:nodes[0].x, y:nodes[0].y, w:nodes[0].w, h:nodes[0].h};
-	} else {
-		rect.x = nodes[0].x; rect.y = nodes[0].y; rect.w = nodes[0].w; rect.h = nodes[0].h;
-	}
+	rect = rect || {};
+	rect.x = nodes[0].x;
+	rect.y = nodes[0].y;
+	rect.w = nodes[0].w;
+	rect.h = nodes[0].h;
 		
-	for(var i = nodes.length-1; i>0; i--){
+	for(var i = 1,len = nodes.length; i<len; i++){
 		RTree.Rectangle.expandRectangle(rect, nodes[i]);
 	}
 		
-	return(rect);
-};
-
-if (typeof module !== 'undefined' && module.exports) {
+	return rect;
+};if (typeof module !== 'undefined' && module.exports) {
 	module.exports = rTree;
 }else if(typeof document === 'undefined'){
 	self.rTree = rTree;

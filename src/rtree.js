@@ -1,10 +1,3 @@
-/**
- * RTree - A simple r-tree structure for great results.
- * @constructor
- */
-(function(){
-	/*global module,window,self */
-'use strict';
 var RTree = function(width){
 	// Variables to control tree-dimensions
 	var minWidth = 3;  // Minimum width of any node before a merge
@@ -14,29 +7,9 @@ var RTree = function(width){
 	var rootTree = {x:0, y:0, w:0, h:0, id:'root', nodes:[] };
 	
 	var isArray = function(o) {
-		return Object.prototype.toString.call(o) === '[object Array]';
+		return Array.isArray?Array.isArray(o):Object.prototype.toString.call(o) === '[object Array]';
 	};
 
-	/* @function
-	 * @description Function to generate unique strings for element IDs
-	 * @param {String} n			The prefix to use for the IDs generated.
-	 * @return {String}				A guarenteed unique ID.
-	 */
-	var nameToId = (function() {
-		// hide our idCache inside this closure
-		var idCache = {};
-
-		// return the api: our function that returns a unique string with incrementing number appended to given idPrefix
-		return function(idPrefix) {
-			var idVal = 0;
-			if(idPrefix in idCache) {
-				idVal = idCache[idPrefix]++;
-			} else {
-				idCache[idPrefix] = 0;
-			}
-			return idPrefix + '_' + idVal;
-		};
-	})();
 
 	// This is my special addition to the world of r-trees
 	// every other (simple) method I found produced crap trees
@@ -49,9 +22,23 @@ var RTree = function(width){
 		// the more 'square' a rectangle is. conversly, when approaching zero the
 		// more elongated a rectangle is
 		var lgeo = larea / (lperi*lperi);
-		return(larea * fill / lgeo);
+		return  larea * fill / lgeo;
 	};
 	
+	var flatten = function(tree){
+		var todo = tree.slice();
+		var done = [];
+		var current;
+		while(todo.length){
+			current = todo.pop();
+			if(current.nodes){
+				todo=todo.concat(current.nodes);
+			} else if (current.leaf) {
+				done.push(current);
+			}
+		}
+		return done;
+	};
 	/* find the best specific node(s) for object to be deleted from
 	 * [ leaf node parent ] = removeSubtree(rectangle, object, root)
 	 * @private
@@ -69,7 +56,7 @@ var RTree = function(width){
 		
 		countStack.push(root.nodes.length);
 		hitStack.push(root);
-		do {
+		while(hitStack.length > 0) {
 			tree = hitStack.pop();
 			i = countStack.pop()-1;
 			if('target' in retObj) { // will this ever be false?
@@ -81,8 +68,7 @@ var RTree = function(width){
 						// Yup we found a match...
 						// we can cancel search and start walking up the list
 							if('nodes' in ltree) {// If we are deleting a node not a leaf...
-								retArray = searchSubtree(ltree, true, [], ltree);
-								tree.nodes.splice(i, 1);
+								retArray = flatten(tree.nodes.splice(i, 1));
 							} else {
 								retArray = tree.nodes.splice(i, 1);
 							}
@@ -129,7 +115,7 @@ var RTree = function(width){
 				RTree.Rectangle.makeMBR(tree.nodes, tree);
 			}
 			currentDepth -= 1;
-		}while(hitStack.length > 0);
+		}
 		return retArray;
 	};
 
@@ -141,12 +127,14 @@ var RTree = function(width){
 		var bestChoiceIndex = -1;
 		var bestChoiceStack = [];
 		var bestChoiceArea;
-	
+		var first=true;
 		bestChoiceStack.push(root);
 		var nodes = root.nodes;
 
-		do {
-			if(bestChoiceIndex !== -1)	{
+		while(first || bestChoiceIndex !== -1) {
+			if(first) {
+				first = false;
+			} else {
 				bestChoiceStack.push(nodes[bestChoiceIndex]);
 				nodes = nodes[bestChoiceIndex].nodes;
 				bestChoiceIndex = -1;
@@ -173,9 +161,9 @@ var RTree = function(width){
 					bestChoiceArea = Math.abs(lratio - oldLRatio); bestChoiceIndex = i;
 				}
 			}
-		}while(bestChoiceIndex !== -1);
+		}
 
-		return(bestChoiceStack);
+		return bestChoiceStack;
 	};
 
 	/* split a set of nodes into two roughly equally-filled nodes
@@ -187,7 +175,7 @@ var RTree = function(width){
 		while(nodes.length > 0)	{
 			pickNext(nodes, n[0], n[1]);
 		}
-		return(n);
+		return n;
 	};
 	
 	/* insert the best source rectangle into the best fitting parent node: a or b
@@ -233,7 +221,7 @@ var RTree = function(width){
 			RTree.Rectangle.expandRectangle(lowestGrowthGroup, tempNode);
 		}
 	};
-
+	
 	/* pick the 'best' two starter nodes to use as seeds using the 'linear' criteria
 	 * [ an array of two new arrays of nodes ] = pickLinear(array of source nodes)
 	 * @private
@@ -277,15 +265,17 @@ var RTree = function(width){
 				t1 = nodes.splice(lowestHighY, 1)[0];
 			}
 		}
-		return([{x:t1.x, y:t1.y, w:t1.w, h:t1.h, nodes:[t1]},
-					{x:t2.x, y:t2.y, w:t2.w, h:t2.h, nodes:[t2]} ]);
+		return [
+			{x:t1.x, y:t1.y, w:t1.w, h:t1.h, nodes:[t1]},
+			{x:t2.x, y:t2.y, w:t2.w, h:t2.h, nodes:[t2]}
+		];
 	};
 	
 	var attachData = function(node, moreTree){
 		node.nodes = moreTree.nodes;
 		node.x = moreTree.x; node.y = moreTree.y;
 		node.w = moreTree.w; node.h = moreTree.h;
-		return(node);
+		return node;
 	};
 
 	/* non-recursive internal search function
@@ -296,13 +286,13 @@ var RTree = function(width){
 		var hitStack = []; // Contains the elements that overlap
 	
 		if(!RTree.Rectangle.overlapRectangle(rect, root)){
-			return(returnArray);
+			return returnArray;
 		}
 	
 	
 		hitStack.push(root.nodes);
 	
-		do {
+		while(hitStack.length > 0){
 			var nodes = hitStack.pop();
 	
 			for(var i = nodes.length-1; i >= 0; i--) {
@@ -319,9 +309,9 @@ var RTree = function(width){
 					}
 				}
 			}
-		}while(hitStack.length > 0);
+		}
 		
-		return(returnArray);
+		return returnArray;
 	};
 	
 	/* non-recursive internal insert function
@@ -346,7 +336,7 @@ var RTree = function(width){
 		var retObj = node;//{x:rect.x,y:rect.y,w:rect.w,h:rect.h, leaf:obj};
 		var pbc;
 		// Walk back up the tree resizing and inserting as needed
-		do {
+		while(treeStack.length > 0) {
 			//handle the case of an empty node (from a split)
 			if(bc && 'nodes' in bc && bc.nodes.length === 0) {
 				pbc = bc; // Past bc
@@ -390,12 +380,12 @@ var RTree = function(width){
 						delete bc;
 					}*/
 				}
-			}	else { // Otherwise Do Resize
+			} else { // Otherwise Do Resize
 				//Just keep applying the new bounding rectangle to the parents..
 				RTree.Rectangle.expandRectangle(bc, retObj);
 				retObj = {x:bc.x,y:bc.y,w:bc.w,h:bc.h};
 			}
-		} while(treeStack.length > 0);
+		}
 	};
 
 	/* quick 'n' dirty function for plugins or manually drawing the tree
@@ -416,7 +406,7 @@ var RTree = function(width){
 		if(!where){
 			where = rootTree;
 		}
-		return(attachData(where, newTree));
+		return attachData(where, newTree);
 	};
 	
 	/* non-recursive search function
@@ -440,118 +430,31 @@ var RTree = function(width){
 		}
 	};
 		
-	/* partially-recursive toJSON function
-	 * [ string ] = RTree.toJSON([rectangle], [tree])
-	 * @public
-	 */
-	this.toJSON = function(rect, tree) {
-		var hitStack = []; // Contains the elements that overlap
-		var countStack = []; // Contains the elements that overlap
-		var returnStack = {}; // Contains the elements that overlap
-		var maxDepth = 3;  // This triggers recursion and tree-splitting
-		var currentDepth = 1;
-		var returnString = '';
-		
-		if(rect && !RTree.Rectangle.overlapRectangle(rect, rootTree)){
-			return '';
-		}
-		
-		if(!tree)	{
-			countStack.push(rootTree.nodes.length);
-			hitStack.push(rootTree.nodes);
-			returnString += 'var mainTree = {x:'+rootTree.x.toFixed()+',y:'+rootTree.y.toFixed()+',w:'+rootTree.w.toFixed()+',h:'+rootTree.h.toFixed()+',nodes:[';
-		}	else {
-			maxDepth += 4;
-			countStack.push(tree.nodes.length);
-			hitStack.push(tree.nodes);
-			returnString += 'var mainTree = {x:'+tree.x.toFixed()+',y:'+tree.y.toFixed()+',w:'+tree.w.toFixed()+',h:'+tree.h.toFixed()+',nodes:[';
-		}
 	
-		do {
-			var nodes = hitStack.pop();
-			var i = countStack.pop()-1;
-			
-			if(i >= 0 && i < nodes.length-1){
-				returnString += ',';
-			}
-				
-			while(i >= 0){
-				var ltree = nodes[i];
-			if(!rect || RTree.Rectangle.overlapRectangle(rect, ltree)) {
-				if(ltree.nodes) { // Not a Leaf
-					if(currentDepth >= maxDepth) {
-						//var len = returnStack.length;
-						var nam = nameToId('savedSubtree');
-						returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',load:"'+nam+'.js"}';
-						returnStack[nam] = this.toJSON(rect, ltree);
-							if(i > 0){
-								returnString += ',';
-							}
-					}	else {
-						returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',nodes:[';
-						currentDepth += 1;
-						countStack.push(i);
-						hitStack.push(nodes);
-						nodes = ltree.nodes;
-						i = ltree.nodes.length;
-					}
-				}	else if(ltree.leaf) { // A Leaf !!
-					var data = ltree.leaf.toJSON ? ltree.leaf.toJSON() : JSON.stringify(ltree.leaf);
-					returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',leaf:' + data + '}';
-						if(i > 0){
-							returnString += ',';
-						}
-				}	else if(ltree.load) { // A load
-					returnString += '{x:'+ltree.x.toFixed()+',y:'+ltree.y.toFixed()+',w:'+ltree.w.toFixed()+',h:'+ltree.h.toFixed()+',load:"' + ltree.load + '"}';
-						if(i > 0){
-							returnString += ',';
-						}
-				}
-				}
-				i -= 1;
-			}
-			if(i < 0)	{
-					returnString += ']}'; currentDepth -= 1;
-			}
-		}while(hitStack.length > 0);
-		
-		returnString+=';';
-		
-		for(var myKey in returnStack) {
-			returnString += '\nvar ' + myKey + ' = function(){' + returnStack[myKey] + ' return(mainTree);};';
+	var removeArea = function(rect,callback){
+		var numberDeleted = 1,
+		retArray = [],
+		deleted;
+		while( numberDeleted > 0) {
+			deleted = removeSubtree(rect,false,rootTree);
+			numberDeleted = deleted.length;
+			retArray = retArray.concat(deleted);
 		}
-		return(returnString);
+			return callback?callback(null, retArray):retArray;
 	};
 	
-	/* non-recursive function that deletes a specific
-	 * [ number ] = RTree.remove(rectangle, obj)
+	var removeObj=function(rect,obj,callback){
+		var retArray = removeSubtree(rect,obj,rootTree);
+		return callback?callback(null, retArray):retArray;
+	};
+		/* non-recursive delete function
+	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
 	this.remove = function(rect, obj, callback) {
-		var numberDeleted,retArray,deleted;
-		if(typeof obj==='function'){
-			callback=obj;
-			obj=false;
-		}
-		if(!obj) { // Do area-wide delete
-			numberDeleted = 1;
-			
-			retArray = [];
-			while( numberDeleted > 0) {
-				deleted = removeSubtree(rect,obj,rootTree);
-				numberDeleted = deleted.length;
-				retArray = retArray.concat(deleted);
-			}
-			if(!callback){
-				return retArray;
-			}else{
-				callback(null, retArray);
-			}
-		}else { // Delete a specific item
-			if(!callback){
-				return(removeSubtree(rect,obj,rootTree));
-			}else{
-				callback(null, removeSubtree(rect,obj,rootTree));
-			}
+		if(!obj||typeof obj==='function'){
+			return removeArea(rect,obj);
+		}else{
+			return removeObj(rect,obj,callback);
 		}
 	};
 		
@@ -559,372 +462,15 @@ var RTree = function(width){
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
 	this.insert = function(rect, obj, callback) {
-		var temp,err;
-		if(arguments.length < 2) {
-			throw 'Wrong number of arguments. RT.Insert requires at least a bounding rectangle and an object.';
-		}
-		if(!callback){
-			return(insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree)||true);
-		}else{
-			try{
-				temp=(insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree));
-			}catch(e){
-				err=e;
-			}finally{
-				callback(err,temp);
-			}
-		}
+		var retArray = insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree);
+		return callback?callback(null, retArray):retArray;
 	};
 	
-	/* non-recursive delete function
-	 * [deleted object] = RTree.remove(rectangle, [object to delete])
-	 */
-	var bbox = function (ar,obj) {
-		if(obj && obj.bbox){
-			return {leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]};
-		}
-		var len = ar.length;
-		var i = 0;
-		var a = new Array(len);
-		while(i<len){
-			a[i]=[ar[i][0],ar[i][1]];
-			i++;
-		}
-		var first = a[0];
-		len = a.length;
-		i = 1;
-		var temp = {min:[].concat(first),max:[].concat(first)};
-		while (i<len) {
-			if(a[i][0] < temp.min[0]) {
-				temp.min[0] = a[i][0];
-			}else if(a[i][0] > temp.max[0]) {
-				temp.max[0] = a[i][0];
-			}
-			if(a[i][1] < temp.min[1]) {
-				temp.min[1] = a[i][1];
-			}else if(a[i][1] > temp.max[1]) {
-				temp.max[1] = a[i][1];
-			}
-			i++;
-		}
-		var out =  {x:temp.min[0],y:temp.min[1],w:(temp.max[0]-temp.min[0]),h:(temp.max[1]-temp.min[1])};
-		if(obj){
-			out.leaf=obj;
-		}
-		return out;
-	};
-	var geoJSON = {};
-	geoJSON.point = function(obj) {
-		return(insertSubtree({x:obj.geometry.coordinates[0],y:obj.geometry.coordinates[1],w:0,h:0,leaf:obj}, rootTree));
-	};
-	geoJSON.multiPointLineString = function(obj) {
-		return(insertSubtree(bbox(obj.geometry.coordinates,obj), rootTree));
-	};
-	geoJSON.multiLineStringPolygon = function(obj) {
-		return(insertSubtree(bbox(Array.prototype.concat.apply([],obj.geometry.coordinates),obj), rootTree));
-	};
-	geoJSON.multiPolygon = function(obj) {
-		return(insertSubtree(bbox(Array.prototype.concat.apply([],Array.prototype.concat.apply([],obj.geometry.coordinates)),obj), rootTree));
-	};
-	geoJSON.makeRec = function(obj){
-		return new RTree.Rectangle(obj.x,obj.y,obj.w,obj.h);
-	};
-	geoJSON.geometryCollection = function(obj){
-		if(obj.bbox){
-			return(insertSubtree({leaf:obj,x:obj.bbox[0],y:obj.bbox[1],w:obj.bbox[2]-obj.bbox[0],h:obj.bbox[3]-obj.bbox[1]}, rootTree));
-		}
-		var geos = obj.geometry.geometries;
-		var i = 0;
-		var len = geos.length;
-		var temp=[];
-		var g;
-		while(i<len){
-			g=geos[i];
-			switch(g.type){
-					case 'Point':
-						temp.push(geoJSON.makeRec({x:g.coordinates[0],y:g.coordinates[1],w:0,h:0}));
-						break;
-					case 'MultiPoint':
-						temp.push(geoJSON.makeRec(bbox(g.coordinates)));
-						break;
-					case 'LineString':
-						temp.push(geoJSON.makeRec(bbox(g.coordinates)));
-						break;
-					case 'MultiLineString':
-						temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([],g.coordinates))));
-						break;
-					case 'Polygon':
-						temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([],g.coordinates))));
-						break;
-					case 'MultiPolygon':
-						temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([],Array.prototype.concat.apply([],g.coordinates)))));
-						break;
-					case 'GeometryCollection':
-						geos=geos.concat(g.geometries);
-						len = geos.length;
-						break;
-				}
-			i++;
-		}
-		var first = temp[0];
-		i=1;
-		len = temp.length;
-		while(i<len){
-			first.expand(temp[i]);
-			i++;
-		}
-		return insertSubtree({leaf:obj,x:first.x(),y:first.y(),h:first.h(),w:first.w()}, rootTree);
-	};
-	this.geoJSON=function(prelim, callback) {
-		callback = callback||function(){return true;};
-		var features,feature;
-		if(isArray(prelim)) {
-			features=prelim.slice();
-		}else if(prelim.features && isArray(prelim.features)) {
-			features=prelim.features.slice();
-		}else{
-			throw('this isn\'t what we\'re looking for');
-		}
-		var len = features.length;
-		var i = 0;
-		while(i<len){
-			feature = features[i];
-			if(feature.type === 'Feature'){
-				switch(feature.geometry.type){
-					case 'Point':
-						geoJSON.point(feature);
-						break;
-					case 'MultiPoint':
-						geoJSON.multiPointLineString(feature);
-						break;
-					case 'LineString':
-						geoJSON.multiPointLineString(feature);
-						break;
-					case 'MultiLineString':
-						geoJSON.multiLineStringPolygon(feature);
-						break;
-					case 'Polygon':
-						geoJSON.multiLineStringPolygon(feature);
-						break;
-					case 'MultiPolygon':
-						geoJSON.multiPolygon(feature);
-						break;
-					case 'GeometryCollection':
-						geoJSON.geometryCollection(feature);
-						break;
-				}
-			}
-			i++;
-		}
-		return callback(null, true);
-	};
-	this.bbox=function(){
-		var x1,y1,x2,y2,callback;
-		switch(arguments.length){
-			case 0:
-				throw('not enough arguments');
-			case 1:
-				x1=arguments[0][0][0];
-				y1=arguments[0][0][1];
-				x2=arguments[0][1][0];
-				y2=arguments[0][1][1];
-				break;
-			case 2:
-				if(typeof arguments[1]==='function'){
-					x1=arguments[0][0][0];
-					y1=arguments[0][0][1];
-					x2=arguments[0][1][0];
-					y2=arguments[0][1][1];
-					callback=arguments[1];
-					break;
-				}else{
-					x1=arguments[0][0];
-					y1=arguments[0][1];
-					x2=arguments[1][0];
-					y2=arguments[1][1];
-					break;
-				}
-				break;
-			case 3:
-				x1=arguments[0][0];
-				y1=arguments[0][1];
-				x2=arguments[1][0];
-				y2=arguments[1][1];
-				callback=arguments[2];
-				break;
-			case 4:
-				x1=arguments[0];
-				y1=arguments[1];
-				x2=arguments[2];
-				y2=arguments[3];
-				break;
-			case 5:
-				x1=arguments[0];
-				y1=arguments[1];
-				x2=arguments[2];
-				y2=arguments[3];
-				callback=arguments[4];
-				break;
-		}
-		if(!callback){
-			return this.search({x:x1,y:y1,w:x2-x1,h:y2-y1});
-		}else{
-			this.search({x:x1,y:y1,w:x2-x1,h:y2-y1},callback);
-		}
-	};
+
+
 	
 //End of RTree
-};
-var rTree = function(width, callback){
-	var temp,err;
-	if(typeof width === 'function'){
-		callback = width;
-		width = undefined;
-	}
-	if(!callback){
-		return new RTree(width);
-	}else{
-		try{
-			temp = new RTree(width);
-		}catch(e){
-			err=e;
-		}finally{
-			callback(err,temp);
-		}
-	}
-};
-/* Rectangle - Generic rectangle object - used! */
-
-RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
-	var x, x2, y, y2, w, h;
-
-	if(ix.x) {
-		x = ix.x; y = ix.y;
-			if(ix.w !== 0 && !ix.w && ix.x2){
-				w = ix.x2-ix.x;	h = ix.y2-ix.y;
-			}	else {
-				w = ix.w;	h = ix.h;
-			}
-		x2 = x + w; y2 = y + h; // For extra fastitude
-	} else {
-		x = ix; y = iy;	w = iw;	h = ih;
-		x2 = x + w; y2 = y + h; // For extra fastitude
-	}
-
-	this.x1 = this.x = function(){return x;};
-	this.y1 = this.y = function(){return y;};
-	this.x2 = function(){return x2;};
-	this.y2 = function(){return y2;};
-	this.w = function(){return w;};
-	this.h = function(){return h;};
-	
-	this.toJSON = function() {
-		return('{"x":'+x.toString()+', "y":'+y.toString()+', "w":'+w.toString()+', "h":'+h.toString()+'}');
-	};
-	
-	this.overlap = function(a) {
-		return(this.x() < a.x2() && this.x2() > a.x() && this.y() < a.y2() && this.y2() > a.y());
-	};
-	
-	this.expand = function(a) {
-		var nx = Math.min(this.x(), a.x());
-		var ny = Math.min(this.y(), a.y());
-		w = Math.max(this.x2(), a.x2()) - nx;
-		h = Math.max(this.y2(), a.y2()) - ny;
-		x = nx; y = ny;
-		return(this);
-	};
-	
-	this.setRect = function(ix, iy, iw, ih) {
-		var x, x2, y, y2, w, h;
-		if(ix.x) {
-			x = ix.x;
-			y = ix.y;
-			if(ix.w !== 0 && !ix.w && ix.x2) {
-				w = ix.x2-ix.x;
-				h = ix.y2-ix.y;
-			}	else {
-				w = ix.w;
-				h = ix.h;
-			}
-			x2 = x + w; y2 = y + h; // For extra fastitude
-		} else {
-			x = ix;
-			y = iy;
-			w = iw;
-			h = ih;
-			x2 = x + w;
-			y2 = y + h; // For extra fastitude
-		}
-	};
-//End of RTree.Rectangle
-};
 
 
-/* returns true if rectangle 1 overlaps rectangle 2
- * [ boolean ] = overlapRectangle(rectangle a, rectangle b)
- * @static function
- */
-RTree.Rectangle.overlapRectangle = function(a, b) {
-	if((a.h===0&&a.w===0)||(b.h===0&&b.w===0)){
-		return(a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y);
-	}else{
-		return(a.x < (b.x+b.w) && (a.x+a.w) > b.x && a.y < (b.y+b.h) && (a.y+a.h) > b.y);
-	}
-};
 
-/* returns true if rectangle a is contained in rectangle b
- * [ boolean ] = containsRectangle(rectangle a, rectangle b)
- * @static function
- */
-RTree.Rectangle.containsRectangle = function(a, b) {
-	return((a.x+a.w) <= (b.x+b.w) && a.x >= b.x && (a.y+a.h) <= (b.y+b.h) && a.y >= b.y);
-};
 
-/* expands rectangle A to include rectangle B, rectangle B is untouched
- * [ rectangle a ] = expandRectangle(rectangle a, rectangle b)
- * @static function
- */
-RTree.Rectangle.expandRectangle = function(a, b)	{
-	var nx = Math.min(a.x, b.x);
-	var ny = Math.min(a.y, b.y);
-	a.w = Math.max(a.x+a.w, b.x+b.w) - nx;
-	a.h = Math.max(a.y+a.h, b.y+b.h) - ny;
-	a.x = nx; a.y = ny;
-	return(a);
-};
-
-/* generates a minimally bounding rectangle for all rectangles in
- * array 'nodes'. If rect is set, it is modified into the MBR. Otherwise,
- * a new rectangle is generated and returned.
- * [ rectangle a ] = makeMBR(rectangle array nodes, rectangle rect)
- * @static function
- */
-RTree.Rectangle.makeMBR = function(nodes, rect) {
-	if(nodes.length < 1){
-		return({x:0, y:0, w:0, h:0});
-	}
-		//throw 'makeMBR: nodes must contain at least one rectangle!';
-	if(!rect){
-		rect = {x:nodes[0].x, y:nodes[0].y, w:nodes[0].w, h:nodes[0].h};
-	} else {
-		rect.x = nodes[0].x; rect.y = nodes[0].y; rect.w = nodes[0].w; rect.h = nodes[0].h;
-	}
-		
-	for(var i = nodes.length-1; i>0; i--){
-		RTree.Rectangle.expandRectangle(rect, nodes[i]);
-	}
-		
-	return(rect);
-};
-
-if (typeof module !== 'undefined' && module.exports) {
-	module.exports = rTree;
-}else if(typeof document === 'undefined'){
-	self.rTree = rTree;
-	self.RTree = RTree;
-}else{
-	window.rTree = rTree;
-	window.RTree = RTree;
-}
-})(this);
