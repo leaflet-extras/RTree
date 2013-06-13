@@ -25,6 +25,21 @@ var RTree = function(width){
 		return  larea * fill / lgeo;
 	};
 	
+	var flatten = function(tree){
+		var todo = tree.slice();
+		var done = [];
+		var current;
+		while(todo.length){
+			current = todo.pop();
+			//console.log(current);
+			if(current.nodes){
+				todo=todo.concat(current.nodes);
+			} else if (current.leaf) {
+				done.push(current);
+			}
+		}
+		return done;
+	};
 	/* find the best specific node(s) for object to be deleted from
 	 * [ leaf node parent ] = removeSubtree(rectangle, object, root)
 	 * @private
@@ -54,8 +69,7 @@ var RTree = function(width){
 						// Yup we found a match...
 						// we can cancel search and start walking up the list
 							if('nodes' in ltree) {// If we are deleting a node not a leaf...
-								retArray = searchSubtree(ltree, true, [], ltree);
-								tree.nodes.splice(i, 1);
+								retArray = flatten(tree.nodes.splice(i, 1));
 							} else {
 								retArray = tree.nodes.splice(i, 1);
 							}
@@ -208,7 +222,7 @@ var RTree = function(width){
 			RTree.Rectangle.expandRectangle(lowestGrowthGroup, tempNode);
 		}
 	};
-
+	
 	/* pick the 'best' two starter nodes to use as seeds using the 'linear' criteria
 	 * [ an array of two new arrays of nodes ] = pickLinear(array of source nodes)
 	 * @private
