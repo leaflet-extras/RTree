@@ -56,7 +56,7 @@ describe('RTree', function () {
 		});
 	});
 	describe('RTree Deletion', function(){
-	/*	it('add them in the first order', function() {
+		it('add them in the first order', function() {
 			var rt = new RTree();
 		data[0].forEach(function(v){
 				rt.insert(v[0],v[1]);
@@ -71,7 +71,9 @@ describe('RTree', function () {
 				//console.log(a,rslt[0]);
 				assert.include(rslt,a);
 			});
-		});*/
+			var rslt2 = rt.remove({x:0, y:0, w:5000, h:10500});
+			assert.equal(rslt2.length+rslt.length,2000);
+		});
 		it('add them in the other order', function() {
 			var rt = new RTree();
 		data[1].forEach(function(v){
@@ -87,6 +89,8 @@ describe('RTree', function () {
 				//console.log(a,rslt[0]);
 				assert.include(rslt,a);
 			});
+			var rslt2 = rt.remove({x:0, y:0, w:5000, h:10500});
+			assert.equal(rslt2.length+rslt.length,2000);
 		});
 	});
 	describe('JSON', function(){
