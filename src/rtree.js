@@ -31,7 +31,6 @@ var RTree = function(width){
 		var current;
 		while(todo.length){
 			current = todo.pop();
-			//console.log(current);
 			if(current.nodes){
 				todo=todo.concat(current.nodes);
 			} else if (current.leaf) {
