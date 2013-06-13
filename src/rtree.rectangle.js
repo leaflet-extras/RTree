@@ -123,17 +123,21 @@ RTree.Rectangle.expandRectangle = function(a, b)	{
  * @static function
  */
 RTree.Rectangle.makeMBR = function(nodes, rect) {
-	if(nodes.length < 1){
-		return {x:0, y:0, w:0, h:0};
+	if(!nodes.length){
+		return {
+			x : 0,
+			y : 0,
+			w : 0,
+			h : 0
+		};
 	}
-		//throw 'makeMBR: nodes must contain at least one rectangle!';
-	if(!rect){
-		rect = {x:nodes[0].x, y:nodes[0].y, w:nodes[0].w, h:nodes[0].h};
-	} else {
-		rect.x = nodes[0].x; rect.y = nodes[0].y; rect.w = nodes[0].w; rect.h = nodes[0].h;
-	}
+	rect = rect || {};
+	rect.x = nodes[0].x;
+	rect.y = nodes[0].y;
+	rect.w = nodes[0].w;
+	rect.h = nodes[0].h;
 		
-	for(var i = nodes.length-1; i>0; i--){
+	for(var i = 1,len = nodes.length; i<len; i++){
 		RTree.Rectangle.expandRectangle(rect, nodes[i]);
 	}
 		
