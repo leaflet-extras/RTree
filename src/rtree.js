@@ -114,12 +114,14 @@ var RTree = function(width){
 		var bestChoiceIndex = -1;
 		var bestChoiceStack = [];
 		var bestChoiceArea;
-	
+		var first=true;
 		bestChoiceStack.push(root);
 		var nodes = root.nodes;
 
-		do {
-			if(bestChoiceIndex !== -1)	{
+		while(first || bestChoiceIndex !== -1) {
+			if(first) {
+				first = false;
+			} else {
 				bestChoiceStack.push(nodes[bestChoiceIndex]);
 				nodes = nodes[bestChoiceIndex].nodes;
 				bestChoiceIndex = -1;
@@ -146,7 +148,7 @@ var RTree = function(width){
 					bestChoiceArea = Math.abs(lratio - oldLRatio); bestChoiceIndex = i;
 				}
 			}
-		}while(bestChoiceIndex !== -1);
+		}
 
 		return(bestChoiceStack);
 	};
@@ -275,7 +277,7 @@ var RTree = function(width){
 	
 		hitStack.push(root.nodes);
 	
-		do {
+		while(hitStack.length > 0){
 			var nodes = hitStack.pop();
 	
 			for(var i = nodes.length-1; i >= 0; i--) {
@@ -292,7 +294,7 @@ var RTree = function(width){
 					}
 				}
 			}
-		}while(hitStack.length > 0);
+		}
 		
 		return(returnArray);
 	};
@@ -319,7 +321,7 @@ var RTree = function(width){
 		var retObj = node;//{x:rect.x,y:rect.y,w:rect.w,h:rect.h, leaf:obj};
 		var pbc;
 		// Walk back up the tree resizing and inserting as needed
-		do {
+		while(treeStack.length > 0) {
 			//handle the case of an empty node (from a split)
 			if(bc && 'nodes' in bc && bc.nodes.length === 0) {
 				pbc = bc; // Past bc
@@ -363,12 +365,12 @@ var RTree = function(width){
 						delete bc;
 					}*/
 				}
-			}	else { // Otherwise Do Resize
+			} else { // Otherwise Do Resize
 				//Just keep applying the new bounding rectangle to the parents..
 				RTree.Rectangle.expandRectangle(bc, retObj);
 				retObj = {x:bc.x,y:bc.y,w:bc.w,h:bc.h};
 			}
-		} while(treeStack.length > 0);
+		}
 	};
 
 	/* quick 'n' dirty function for plugins or manually drawing the tree
