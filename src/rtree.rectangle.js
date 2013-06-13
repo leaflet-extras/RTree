@@ -1,26 +1,27 @@
-RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
-	var x, x2, y, y2, w, h;
+RTree.Rectangle = function(x, y, w, h) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
+	var x2, y2, p;
 
-	if(ix.x) {
-		x = ix.x; y = ix.y;
-			if(ix.w !== 0 && !ix.w && ix.x2){
-				w = ix.x2-ix.x;
-				h = ix.y2-ix.y;
-			} else {
-				w = ix.w;
-				h = ix.h;
-			}
+	if(x.x) {
+		w = x.w;
+		h = x.h;
+		y = x.y;
+		if(x.w !== 0 && !x.w && x.x2){
+			w = x.x2-x.x;
+			h = x.y2-x.y;
+		} else {
+			w = x.w;
+			h = x.h;
+		}
+		x = x.x;
 		// For extra fastitude
 		x2 = x + w;
 		y2 = y + h;
+		p = (h+w)?false:true;
 	} else {
-		x = ix;
-		y = iy;
-		w = iw;
-		h = ih;
 		// For extra fastitude
 		x2 = x + w;
 		y2 = y + h;
+		p = (h+w)?false:true;
 	}
 
 	this.x1 = this.x = function(){return x;};
@@ -29,9 +30,12 @@ RTree.Rectangle = function(ix, iy, iw, ih) { // new Rectangle(bounds) or new Rec
 	this.y2 = function(){return y2;};
 	this.w = function(){return w;};
 	this.h = function(){return h;};
-	
+	this.p = function(){return p;};
 	
 	this.overlap = function(a) {
+		if(p||a.p()){
+			return x <= a.x2() && x2 >= a.x() && y <= a.y2() && y2 >= a.y();
+		}
 		return x < a.x2() && x2 > a.x() && y < a.y2() && y2 > a.y();
 	};
 	
