@@ -86,11 +86,33 @@ RTree.Rectangle.containsRectangle = function(a, b) {
  * @static function
  */
 RTree.Rectangle.expandRectangle = function(a, b)	{
-	var nx = Math.min(a.x, b.x);
-	var ny = Math.min(a.y, b.y);
-	a.w = Math.max(a.x+a.w, b.x+b.w) - nx;
-	a.h = Math.max(a.y+a.h, b.y+b.h) - ny;
-	a.x = nx; a.y = ny;
+	var nx,ny;
+	var axw = a.x+a.w;
+	var bxw = b.x+b.w;
+	var ayh = a.y+a.h;
+	var byh = b.y+b.h;
+	if(a.x > b.x) {
+		nx=b.x;
+	} else {
+		nx=a.x;
+	}
+	if(a.y > b.y) {
+		ny=b.y;
+	} else {
+		ny=a.y;
+	}
+	if(axw > bxw) {
+		a.w = axw-nx;
+	} else {
+			a.w = bxw-nx;
+	}
+	if(ayh > byh) {
+		a.h = ayh;
+	} else {
+		a.h = byh;
+	}
+	a.x = nx;
+	a.y = ny;
 	return a;
 };
 
