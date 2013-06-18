@@ -3,23 +3,38 @@ module.exports = function(grunt) {
 	// Project configuration.
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
-			banner:'/****************************************************************************** \nrtree.js -Non-Recursive Javascript R-Tree Library\nVersion 1.0.0, March 15th 2013\n\nhttps://github.com/leaflet-extras/RTree.\n******************************************************************************/\n',
-		uglify: {
+			banner:'/****************************************************************************** \n\
+			rtree.js -Non-Recursive Javascript R-Tree Library\n\
+			Version 1.0.0, March 15th 2013\n\n\
+			https://github.com/leaflet-extras/RTree.\n\
+			******************************************************************************/\n\
+			(function(){\n\
+			/*global module,window,self */\n\
+			\'use strict\';\n',
+			footer:'if (typeof module !== \'undefined\' && module.exports) {\n\
+	module.exports = rTree;\n\
+}else if(typeof document === \'undefined\'){\n\
+	self.rTree = rTree;\n\
+	self.RTree = RTree;\n\
+}else{\n\
+	window.rTree = rTree;\n\
+	window.RTree = RTree;\n\
+}\n\
+})(this);\n',
+			uglify: {
 			all: {
-				options:{
-					banner: '<%= banner %>'
-				},
-				src: 'src/<%= pkg.name %>.js',
-				dest: 'dist/<%= pkg.name %>.min.js'
+				src: 'dist/rtree.js',
+				dest: 'dist/rtree.min.js'
 			}
 		},
 		concat: {
 			all: {
 				options:{
-					banner: '<%= banner %>'
+					banner: '<%= banner %>',
+					footer:'<%= footer %>'
 				},
-				src: 'src/<%= pkg.name %>.js',
-				dest: 'dist/<%= pkg.name %>.js'
+				src: ['src/rtree.js','src/rtree.json.js','src/rtree.geojson.js','src/rtree.end.js','src/rtree.rectangle.js'],
+				dest: 'dist/rtree.js'
 			}
 		},
 		jshint: {
@@ -39,13 +54,13 @@ module.exports = function(grunt) {
 					strict:true,
 					trailing:true
 				},
-				src: 'src/<%= pkg.name %>.js'
+				src: 'dist/<%= pkg.name %>.js'
 			}
 		},
 		connect: {
 			server: {
 				options: {
-					port: 8000,
+					port: process.env.PORT||8000,
 					base: '.'
 				}
 			}
@@ -54,7 +69,8 @@ module.exports = function(grunt) {
 			all: {
 				options: {
 					urls: [
-						"http://localhost:8000/tests/index.html"
+						"http://"+process.env.IP+":"+process.env.PORT+"/tests/index.html",
+						"http://"+process.env.IP+":"+process.env.PORT+"/tests/index.html"
 					]
 				}
 			}
@@ -67,6 +83,11 @@ module.exports = function(grunt) {
 					concurrency:3,
 					build: process.env.TRAVIS_JOB_ID,
 					browsers: [
+						{
+							browserName: 'internet explorer',
+							platform: 'win7',
+							version: '9'
+						},
 						{
 							browserName: "firefox",
 							platform: "linux",
@@ -86,7 +107,7 @@ module.exports = function(grunt) {
 						},{
 							browserName: 'chrome',
 							platform: 'linux'
-						}, {
+						},{
 							browserName: 'internet explorer',
 							platform: 'WIN8',
 							version: '10'
@@ -98,10 +119,6 @@ module.exports = function(grunt) {
 							browserName: 'opera',
 							platform: 'win7',
 							version: '12'
-						},{
-							browserName: 'internet explorer',
-							platform: 'win7',
-							version: '9'
 						}
 					],
 				urls: [
@@ -119,6 +136,8 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-connect');
 	grunt.loadNpmTasks('grunt-mocha-phantomjs');
 	grunt.loadNpmTasks('grunt-saucelabs');
+	grunt.registerTask('c9Test', ['connect:server','mocha_phantomjs']);
 	grunt.registerTask('test', ['connect:server','saucelabs-mocha']);
-	grunt.registerTask('default', ['jshint','concat','uglify','test']);
+	grunt.registerTask('default', ['concat','uglify','jshint','test']);
+	grunt.registerTask('c9', ['concat','uglify','jshint','c9Test']);
 };
