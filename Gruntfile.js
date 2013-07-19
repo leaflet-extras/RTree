@@ -9,18 +9,9 @@ module.exports = function(grunt) {
 			https://github.com/leaflet-extras/RTree.\n\
 			******************************************************************************/\n\
 			(function(){\n\
-			/*global module,window,self */\n\
+			/*global module,window,self,RTree */\n\
 			\'use strict\';\n',
-			footer:'if (typeof module !== \'undefined\' && module.exports) {\n\
-	module.exports = rTree;\n\
-}else if(typeof document === \'undefined\'){\n\
-	self.rTree = rTree;\n\
-	self.RTree = RTree;\n\
-}else{\n\
-	window.rTree = rTree;\n\
-	window.RTree = RTree;\n\
-}\n\
-})(this);\n',
+			
 			uglify: {
 			all: {
 				src: 'dist/rtree.js',
@@ -30,10 +21,9 @@ module.exports = function(grunt) {
 		concat: {
 			all: {
 				options:{
-					banner: '<%= banner %>',
-					footer:'<%= footer %>'
+					banner: '<%= banner %>'
 				},
-				src: ['src/rtree.js','src/rtree.json.js','src/rtree.geojson.js','src/rtree.end.js','src/rtree.rectangle.js'],
+				src: ['src/rtree.js','src/rtree.json.js','src/rtree.end.js','src/rtree.rectangle.js','src/rtree.geojson.js'],
 				dest: 'dist/rtree.js'
 			}
 		},

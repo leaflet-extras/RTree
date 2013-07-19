@@ -4,7 +4,7 @@
 	 */
 	this.toJSON = function(rect, callback) {
 		callback = callback||function(err,data){return data;};
-		return callback(null,JSON.stringify(rootTree));
+		return callback(null,JSON.stringify(this.root));
 	};
 	
 	RTree.fromJSON = function(json, callback) {
