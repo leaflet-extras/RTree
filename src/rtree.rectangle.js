@@ -1,4 +1,5 @@
 RTree.Rectangle = function(x, y, w, h) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
+	'use strict';
 	var x2, y2, p;
 
 	if(x.x) {
@@ -79,6 +80,7 @@ RTree.Rectangle = function(x, y, w, h) { // new Rectangle(bounds) or new Rectang
  * @static function
  */
 RTree.Rectangle.overlapRectangle = function(a, b) {
+	'use strict';
 	//if(!((a.h||a.w)&&(b.h||b.w))){ not faster resist the urge!
 	if((a.h===0&&a.w===0)||(b.h===0&&b.w===0)){
 		return a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y;
@@ -92,6 +94,7 @@ RTree.Rectangle.overlapRectangle = function(a, b) {
  * @static function
  */
 RTree.Rectangle.containsRectangle = function(a, b) {
+	'use strict';
 	return (a.x+a.w) <= (b.x+b.w) && a.x >= b.x && (a.y+a.h) <= (b.y+b.h) && a.y >= b.y;
 };
 
@@ -99,7 +102,8 @@ RTree.Rectangle.containsRectangle = function(a, b) {
  * [ rectangle a ] = expandRectangle(rectangle a, rectangle b)
  * @static function
  */
-RTree.Rectangle.expandRectangle = function(a, b)	{
+RTree.Rectangle.expandRectangle = function(a, b) {
+	'use strict';
 	var nx,ny;
 	var axw = a.x+a.w;
 	var bxw = b.x+b.w;
@@ -137,6 +141,7 @@ RTree.Rectangle.expandRectangle = function(a, b)	{
  * @static function
  */
 RTree.Rectangle.makeMBR = function(nodes, rect) {
+	'use strict';
 	if(!nodes.length){
 		return {
 			x : 0,

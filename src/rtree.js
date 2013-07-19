@@ -1,11 +1,11 @@
-var RTree = function(width){
+function RTree(width){
 	// Variables to control tree-dimensions
 	var minWidth = 3;  // Minimum width of any node before a merge
 	var maxWidth = 6;  // Maximum width of any node before a split
 	if(!isNaN(width)){ minWidth = Math.floor(width/2.0); maxWidth = width;}
 	// Start with an empty root-tree
 	var rootTree = {x:0, y:0, w:0, h:0, id:'root', nodes:[] };
-	
+	this.root = rootTree;
 	var isArray = function(o) {
 		return Array.isArray?Array.isArray(o):Object.prototype.toString.call(o) === '[object Array]';
 	};
@@ -388,6 +388,7 @@ var RTree = function(width){
 		}
 	};
 
+	this.insertSubtree = insertSubtree;
 	/* quick 'n' dirty function for plugins or manually drawing the tree
 	 * [ tree ] = RTree.getTree(): returns the raw tree data. useful for adding
 	 * @public
