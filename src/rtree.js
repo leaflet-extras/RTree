@@ -414,25 +414,13 @@ function RTree(width){
 	* [ nodes | objects ] = RTree.search(rectangle, [return node data], [array to fill])
 	 * @public
 	 */
-	this.search = function(rect, returnNode, returnArray, callback) {
-		if(typeof returnNode==='function'){
-			callback = returnNode;
-			returnNode=false;
-			returnArray=[];
-		}else if(typeof returnArray==='function'){
-			callback = returnArray;
-			returnArray=[];
-		}
+	this.search = function(rect, returnNode, returnArray) {
 		returnArray = returnArray||[];
-		if(callback){
-			callback(null,searchSubtree(rect,returnNode,returnArray,rootTree));
-		}else{
-			return searchSubtree(rect,returnNode,returnArray,rootTree);
-		}
+		return searchSubtree(rect,returnNode,returnArray,rootTree);
 	};
 		
 	
-	var removeArea = function(rect,callback){
+	var removeArea = function(rect){
 		var numberDeleted = 1,
 		retArray = [],
 		deleted;
@@ -441,30 +429,30 @@ function RTree(width){
 			numberDeleted = deleted.length;
 			retArray = retArray.concat(deleted);
 		}
-			return callback?callback(null, retArray):retArray;
+			return retArray;
 	};
 	
-	var removeObj=function(rect,obj,callback){
+	var removeObj=function(rect,obj){
 		var retArray = removeSubtree(rect,obj,rootTree);
-		return callback?callback(null, retArray):retArray;
+		return retArray;
 	};
 		/* non-recursive delete function
 	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
-	this.remove = function(rect, obj, callback) {
+	this.remove = function(rect, obj) {
 		if(!obj||typeof obj==='function'){
 			return removeArea(rect,obj);
 		}else{
-			return removeObj(rect,obj,callback);
+			return removeObj(rect,obj);
 		}
 	};
 		
 	/* non-recursive insert function
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
-	this.insert = function(rect, obj, callback) {
+	this.insert = function(rect, obj) {
 		var retArray = insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree);
-		return callback?callback(null, retArray):retArray;
+		return retArray;
 	};
 	
 
