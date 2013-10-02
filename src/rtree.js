@@ -1,11 +1,11 @@
-var RTree = function(width){
+function RTree(width){
 	// Variables to control tree-dimensions
 	var minWidth = 3;  // Minimum width of any node before a merge
 	var maxWidth = 6;  // Maximum width of any node before a split
 	if(!isNaN(width)){ minWidth = Math.floor(width/2.0); maxWidth = width;}
 	// Start with an empty root-tree
 	var rootTree = {x:0, y:0, w:0, h:0, id:'root', nodes:[] };
-	
+	this.root = rootTree;
 	var isArray = function(o) {
 		return Array.isArray?Array.isArray(o):Object.prototype.toString.call(o) === '[object Array]';
 	};
@@ -388,6 +388,7 @@ var RTree = function(width){
 		}
 	};
 
+	this.insertSubtree = insertSubtree;
 	/* quick 'n' dirty function for plugins or manually drawing the tree
 	 * [ tree ] = RTree.getTree(): returns the raw tree data. useful for adding
 	 * @public
@@ -413,25 +414,13 @@ var RTree = function(width){
 	* [ nodes | objects ] = RTree.search(rectangle, [return node data], [array to fill])
 	 * @public
 	 */
-	this.search = function(rect, returnNode, returnArray, callback) {
-		if(typeof returnNode==='function'){
-			callback = returnNode;
-			returnNode=false;
-			returnArray=[];
-		}else if(typeof returnArray==='function'){
-			callback = returnArray;
-			returnArray=[];
-		}
+	this.search = function(rect, returnNode, returnArray) {
 		returnArray = returnArray||[];
-		if(callback){
-			callback(null,searchSubtree(rect,returnNode,returnArray,rootTree));
-		}else{
-			return searchSubtree(rect,returnNode,returnArray,rootTree);
-		}
+		return searchSubtree(rect,returnNode,returnArray,rootTree);
 	};
 		
 	
-	var removeArea = function(rect,callback){
+	var removeArea = function(rect){
 		var numberDeleted = 1,
 		retArray = [],
 		deleted;
@@ -440,30 +429,30 @@ var RTree = function(width){
 			numberDeleted = deleted.length;
 			retArray = retArray.concat(deleted);
 		}
-			return callback?callback(null, retArray):retArray;
+			return retArray;
 	};
 	
-	var removeObj=function(rect,obj,callback){
+	var removeObj=function(rect,obj){
 		var retArray = removeSubtree(rect,obj,rootTree);
-		return callback?callback(null, retArray):retArray;
+		return retArray;
 	};
 		/* non-recursive delete function
 	 * [deleted object] = RTree.remove(rectangle, [object to delete])
 	 */
-	this.remove = function(rect, obj, callback) {
+	this.remove = function(rect, obj) {
 		if(!obj||typeof obj==='function'){
 			return removeArea(rect,obj);
 		}else{
-			return removeObj(rect,obj,callback);
+			return removeObj(rect,obj);
 		}
 	};
 		
 	/* non-recursive insert function
 	 * [] = RTree.insert(rectangle, object to insert)
 	 */
-	this.insert = function(rect, obj, callback) {
+	this.insert = function(rect, obj) {
 		var retArray = insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree);
-		return callback?callback(null, retArray):retArray;
+		return retArray;
 	};
 	
 
