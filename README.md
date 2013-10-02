@@ -1,11 +1,11 @@
 #rTree
 
-A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of [Jon-Carlos Rivera's fantastic library](https://github.com/imbcmdth/RTree) which sadly seems not to be maintained. MIT Licensed. 
+A non-recursive R-Tree library in pure JavaScript with no dependencies.  Fork of [Jon-Carlos Rivera's fantastic library](https://github.com/imbcmdth/RTree) which sadly seems not to be maintained. MIT Licensed. 
 
 
 ##So far:
 
-- Bugfix when deleting points.
+- Bug fix when deleting points.
 - Common.js module.
 - Updated tests.
 - Factory function for constructor.
@@ -74,7 +74,7 @@ A non-recursive R-Tree library in pure JavaScript with no dependencies. Fork of 
 
 - Deletes all object that touch the 10x10 rectangle starting at position 10x10:
 - `var myDelCount = myRTree.delete({x:10, y:10, w:10, h:10});`
-- Delete only specific_object if it touches the 10x10 rectangle starting at position 10x10:
+- Delete only specific object if it touches the 10x10 rectangle starting at position 10x10:
 - `var myDelCount = myRTree.delete({x:10, y:10, w:10, h:10}, specific_object);`
 
 ##rTree.geoJSON:
@@ -132,7 +132,7 @@ myRTree.geoJSON({
 - An array of matched features.
 
 ###Usage:
-- Search a 10x10 area that starts at position 10x10 (these are all equivilent):
+- Search a 10x10 area that starts at position 10x10 (these are all equivalent):
 - `var myObjects1 = myRTree.bbox([[10,10],[20,20]]);`
 - `var myObjects2 = myRTree.bbox([[10,10],[20,20]]);`
 - `var myObjects3 = myRTree.bbox([10,10],[20,20]);`
@@ -142,13 +142,13 @@ myRTree.geoJSON({
 
 ##rTree.search
 
--  **RTree.search** ( Rectangle[<sup>3</sup>](#f3) **area** [, Boolian **return_node**, Array **return_array** ])
+-  **RTree.search** ( Rectangle[<sup>3</sup>](#f3) **area** [, Boolean **return node**, Array **return_array** ])
 
 ###Parameters: 
 
 -  **area** : **required** : An area to search within.
--  **return_node** : _optional_ : Whether to return the entire node, mainly internal option.
--  **return_array** : _optional_ : An existing array to add the results to, defaults to [], mainly internal option.
+-  **return node** : _optional_ : Whether to return the entire node, mainly internal option.
+-  **return array** : _optional_ : An existing array to add the results to, defaults to [], mainly internal option.
 
 ###Returns: 
 
