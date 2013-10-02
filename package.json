@@ -1,6 +1,6 @@
 {
   "name": "rtree",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "rtree library for javascript",
   "keywords": [
     "rtree"
@@ -17,10 +17,10 @@
   "main": "./dist/rtree.js",
   "directories": {
     "example": "examples",
-    "test": "tests"
+    "test": "test"
   },
   "scripts": {
-    "test": "grunt"
+    "test": "grunt test"
   },
   "repository": {
     "type": "git",
@@ -32,9 +32,8 @@
     "grunt-contrib-uglify": "~0.2.2",
     "grunt-contrib-concat": "~0.3.0",
     "grunt-contrib-jshint": "~0.6.0",
-    "grunt-simple-mocha": "~0.4.0",
-    "grunt-mocha-phantomjs": "~0.2.8",
-    "grunt-saucelabs": "~4.0.4",
-    "grunt-contrib-connect": "~0.3.0"
+    "grunt-mocha-test": "~0.7.0",
+    "chai": "~1.8.0",
+    "grunt-browserify": "~1.2.8"
   }
 }

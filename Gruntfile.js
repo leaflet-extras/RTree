@@ -1,133 +1,59 @@
+var banner = '/****************************************************************************** \n\
+			rtree.js -Non-Recursive Javascript R-Tree Library\n\
+			Version 1.0.0, March 15th 2013\n\n\
+			https://github.com/leaflet-extras/RTree.\n\
+			******************************************************************************/\n';
 module.exports = function(grunt) {
 
 	// Project configuration.
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
-			banner:'/****************************************************************************** \n\
+		uglify: {
+			options: {
+				mangle: true,
+				banner: '/****************************************************************************** \n\
 			rtree.js -Non-Recursive Javascript R-Tree Library\n\
-			Version 1.0.0, March 15th 2013\n\n\
+			Version <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %>\n\n\
 			https://github.com/leaflet-extras/RTree.\n\
-			******************************************************************************/\n\
-			(function(){\n\
-			/*global module,window,self,RTree */\n\
-			\'use strict\';\n',
-			
-			uglify: {
+			******************************************************************************/\n',
+				report: 'gzip'
+			},
 			all: {
 				src: 'dist/rtree.js',
 				dest: 'dist/rtree.min.js'
 			}
 		},
-		concat: {
-			all: {
-				options:{
-					banner: '<%= banner %>'
-				},
-				src: ['src/rtree.js','src/rtree.json.js','src/rtree.end.js','src/rtree.rectangle.js','src/rtree.geojson.js'],
-				dest: 'dist/rtree.js'
-			}
-		},
 		jshint: {
-			all:{
-				options:{
-					bitwise:true,
-					camelcase:true,
-					curly:true,
-					eqeqeq:true,
-					immed:true,
-					latedef:true,
-					newcap:true,
-					noarg:true,
-					quotmark:'single',
-					undef:true,
-					unused:true,
-					strict:true,
-					trailing:true
-				},
-				src: 'dist/<%= pkg.name %>.js'
-			}
-		},
-		connect: {
-			server: {
-				options: {
-					port: process.env.PORT||8000,
-					base: '.'
-				}
-			}
-		},
-		mocha_phantomjs: {
 			all: {
 				options: {
-					urls: [
-						"http://"+process.env.IP+":"+process.env.PORT+"/tests/index.html",
-						"http://"+process.env.IP+":"+process.env.PORT+"/tests/index.html"
-					]
-				}
+					jshintrc: '.jshintrc'
+				},
+				src: 'lib/*.js'
 			}
 		},
-		"saucelabs-mocha":{
-			all:{
-				options:{
-					username:"rtrees",
-					key: "348b94f0-0bb9-4a45-898f-66c88bec254c",
-					concurrency:3,
-					build: process.env.TRAVIS_JOB_ID,
-					browsers: [
-						{
-							browserName: 'internet explorer',
-							platform: 'win7',
-							version: '9'
-						},
-						{
-							browserName: "firefox",
-							platform: "linux",
-							version: "21"
-						},{
-							browserName: "safari",
-							platform: "OS X 10.8",
-							version:'6'
-						},{
-							browserName: "safari",
-							platform: "OS X 10.6",
-							version:'5'
-						},{
-							browserName: "iphone",
-							platform: "OS X 10.8",
-							version:'6'
-						},{
-							browserName: 'chrome',
-							platform: 'linux'
-						},{
-							browserName: 'internet explorer',
-							platform: 'WIN8',
-							version: '10'
-						}, {
-							browserName: 'opera',
-							platform: 'linux',
-							version: '12'
-						},{
-							browserName: 'opera',
-							platform: 'win7',
-							version: '12'
-						}
-					],
-				urls: [
-						"http://localhost:8000/tests/index.html",
-						"http://localhost:8000/tests/min.html"
-					]
+		mochaTest: {
+			test: {
+				options: {
+					reporter: 'nyan'
+				},
+				src: ['test/*.test.js']
+			}
+		},
+		browserify: {
+			all: {
+				files: {
+					'dist/rtree.js': ['lib/index.js'],
+				},
+				options: {
+					standalone: 'RTree'
 				}
 			}
 		}
 	});
+	grunt.loadNpmTasks('grunt-browserify');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks('grunt-contrib-concat');
-	grunt.loadNpmTasks('grunt-simple-mocha');
-	grunt.loadNpmTasks('grunt-contrib-connect');
-	grunt.loadNpmTasks('grunt-mocha-phantomjs');
-	grunt.loadNpmTasks('grunt-saucelabs');
-	grunt.registerTask('c9Test', ['connect:server','mocha_phantomjs']);
-	grunt.registerTask('test', ['connect:server','saucelabs-mocha']);
-	grunt.registerTask('default', ['concat','uglify','jshint','test']);
-	grunt.registerTask('c9', ['concat','uglify','jshint','c9Test']);
+	grunt.loadNpmTasks('grunt-mocha-test');
+	grunt.registerTask('test', ['mochaTest']);
+	grunt.registerTask('default', ['jshint', 'test', 'browserify', 'uglify']);
 };
