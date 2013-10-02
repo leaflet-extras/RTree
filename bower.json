@@ -1,0 +1,21 @@
+{
+  "name": "rtree",
+  "version": "1.2.0",
+  "homepage": "https://github.com/leaflet-extras/RTree",
+  "authors": [
+    "Calvin Metcalf <calvin.metcalf@state.ma.us>"
+  ],
+  "description": "rtree library for javascript",
+  "main": "dist/rtree.js",
+  "keywords": [
+    "rtree"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
