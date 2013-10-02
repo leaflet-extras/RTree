@@ -1,13 +1,431 @@
-/****************************************************************************** 
-			rtree.js -Non-Recursive Javascript R-Tree Library
-			Version 1.0.0, March 15th 2013
+(function(e){if("function"==typeof bootstrap)bootstrap("rtree",e);else if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else if("undefined"!=typeof ses){if(!ses.ok())return;ses.makeRTree=e}else"undefined"!=typeof window?window.RTree=e():global.RTree=e()})(function(){var define,ses,bootstrap,module,exports;
+return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+'use strict';
+var rectangle = require('./rectangle');
+var bbox = function(ar, obj) {
+	if (obj && obj.bbox) {
+		return {
+			leaf: obj,
+			x: obj.bbox[0],
+			y: obj.bbox[1],
+			w: obj.bbox[2] - obj.bbox[0],
+			h: obj.bbox[3] - obj.bbox[1]
+		};
+	}
+	var len = ar.length;
+	var i = 0;
+	var a = new Array(len);
+	while (i < len) {
+		a[i] = [ar[i][0], ar[i][1]];
+		i++;
+	}
+	var first = a[0];
+	len = a.length;
+	i = 1;
+	var temp = {
+		min: [].concat(first),
+		max: [].concat(first)
+	};
+	while (i < len) {
+		if (a[i][0] < temp.min[0]) {
+			temp.min[0] = a[i][0];
+		}
+		else if (a[i][0] > temp.max[0]) {
+			temp.max[0] = a[i][0];
+		}
+		if (a[i][1] < temp.min[1]) {
+			temp.min[1] = a[i][1];
+		}
+		else if (a[i][1] > temp.max[1]) {
+			temp.max[1] = a[i][1];
+		}
+		i++;
+	}
+	var out = {
+		x: temp.min[0],
+		y: temp.min[1],
+		w: (temp.max[0] - temp.min[0]),
+		h: (temp.max[1] - temp.min[1])
+	};
+	if (obj) {
+		out.leaf = obj;
+	}
+	return out;
+};
+var geoJSON = {};
+geoJSON.point = function(obj, self) {
+	return (self.insertSubtree({
+		x: obj.geometry.coordinates[0],
+		y: obj.geometry.coordinates[1],
+		w: 0,
+		h: 0,
+		leaf: obj
+	}, self.root));
+};
+geoJSON.multiPointLineString = function(obj, self) {
+	return (self.insertSubtree(bbox(obj.geometry.coordinates, obj), self.root));
+};
+geoJSON.multiLineStringPolygon = function(obj, self) {
+	return (self.insertSubtree(bbox(Array.prototype.concat.apply([], obj.geometry.coordinates), obj), self.root));
+};
+geoJSON.multiPolygon = function(obj, self) {
+	return (self.insertSubtree(bbox(Array.prototype.concat.apply([], Array.prototype.concat.apply([], obj.geometry.coordinates)), obj), self.root));
+};
+geoJSON.makeRec = function(obj) {
+	return rectangle(obj.x, obj.y, obj.w, obj.h);
+};
+geoJSON.geometryCollection = function(obj, self) {
+	if (obj.bbox) {
+		return (self.insertSubtree({
+			leaf: obj,
+			x: obj.bbox[0],
+			y: obj.bbox[1],
+			w: obj.bbox[2] - obj.bbox[0],
+			h: obj.bbox[3] - obj.bbox[1]
+		}, self.root));
+	}
+	var geos = obj.geometry.geometries;
+	var i = 0;
+	var len = geos.length;
+	var temp = [];
+	var g;
+	while (i < len) {
+		g = geos[i];
+		switch (g.type) {
+		case 'Point':
+			temp.push(geoJSON.makeRec({
+				x: g.coordinates[0],
+				y: g.coordinates[1],
+				w: 0,
+				h: 0
+			}));
+			break;
+		case 'MultiPoint':
+			temp.push(geoJSON.makeRec(bbox(g.coordinates)));
+			break;
+		case 'LineString':
+			temp.push(geoJSON.makeRec(bbox(g.coordinates)));
+			break;
+		case 'MultiLineString':
+			temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([], g.coordinates))));
+			break;
+		case 'Polygon':
+			temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([], g.coordinates))));
+			break;
+		case 'MultiPolygon':
+			temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([], Array.prototype.concat.apply([], g.coordinates)))));
+			break;
+		case 'GeometryCollection':
+			geos = geos.concat(g.geometries);
+			len = geos.length;
+			break;
+		}
+		i++;
+	}
+	var first = temp[0];
+	i = 1;
+	len = temp.length;
+	while (i < len) {
+		first.expand(temp[i]);
+		i++;
+	}
+	return self.insertSubtree({
+		leaf: obj,
+		x: first.x(),
+		y: first.y(),
+		h: first.h(),
+		w: first.w()
+	}, self.root);
+};
+exports.geoJSON = function(prelim) {
+	var that = this;
+	var features, feature;
+	if (Array.isArray(prelim)) {
+		features = prelim.slice();
+	}
+	else if (prelim.features && Array.isArray(prelim.features)) {
+		features = prelim.features.slice();
+	}
+	else {
+		throw ('this isn\'t what we\'re looking for');
+	}
+	var len = features.length;
+	var i = 0;
+	while (i < len) {
+		feature = features[i];
+		if (feature.type === 'Feature') {
+			switch (feature.geometry.type) {
+			case 'Point':
+				geoJSON.point(feature, that);
+				break;
+			case 'MultiPoint':
+				geoJSON.multiPointLineString(feature, that);
+				break;
+			case 'LineString':
+				geoJSON.multiPointLineString(feature, that);
+				break;
+			case 'MultiLineString':
+				geoJSON.multiLineStringPolygon(feature, that);
+				break;
+			case 'Polygon':
+				geoJSON.multiLineStringPolygon(feature, that);
+				break;
+			case 'MultiPolygon':
+				geoJSON.multiPolygon(feature, that);
+				break;
+			case 'GeometryCollection':
+				geoJSON.geometryCollection(feature, that);
+				break;
+			}
+		}
+		i++;
+	}
+};
+exports.bbox = function() {
+	var x1, y1, x2, y2;
+	switch (arguments.length) {
+	case 1:
+		x1 = arguments[0][0][0];
+		y1 = arguments[0][0][1];
+		x2 = arguments[0][1][0];
+		y2 = arguments[0][1][1];
+		break;
+	case 2:
+		x1 = arguments[0][0];
+		y1 = arguments[0][1];
+		x2 = arguments[1][0];
+		y2 = arguments[1][1];
+		break;
+	case 4:
+		x1 = arguments[0];
+		y1 = arguments[1];
+		x2 = arguments[2];
+		y2 = arguments[3];
+		break;
+	}
 
-			https://github.com/leaflet-extras/RTree.
-			******************************************************************************/
-			(function(){
-			/*global module,window,self,RTree */
-			'use strict';
+	return this.search({
+		x: x1,
+		y: y1,
+		w: x2 - x1,
+		h: y2 - y1
+	});
+};
+},{"./rectangle":3}],2:[function(require,module,exports){
+'use strict';
+var RTree = require('./rtree');
+var geojson = require('./geojson');
+RTree.prototype.bbox = geojson.bbox;
+RTree.prototype.geoJSON = geojson.geoJSON;
+RTree.Rectangle = require('./rectangle');
+module.exports = RTree;
+},{"./geojson":1,"./rectangle":3,"./rtree":4}],3:[function(require,module,exports){
+'use strict';
+function Rectangle(x, y, w, h) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
+	if (!(this instanceof Rectangle)) {
+		return new Rectangle(x, y, w, h);
+	}
+	var x2, y2, p;
+
+	if (x.x) {
+		w = x.w;
+		h = x.h;
+		y = x.y;
+		if (x.w !== 0 && !x.w && x.x2) {
+			w = x.x2 - x.x;
+			h = x.y2 - x.y;
+		}
+		else {
+			w = x.w;
+			h = x.h;
+		}
+		x = x.x;
+		// For extra fastitude
+		x2 = x + w;
+		y2 = y + h;
+		p = (h + w) ? false : true;
+	}
+	else {
+		// For extra fastitude
+		x2 = x + w;
+		y2 = y + h;
+		p = (h + w) ? false : true;
+	}
+
+	this.x1 = this.x = function() {
+		return x;
+	};
+	this.y1 = this.y = function() {
+		return y;
+	};
+	this.x2 = function() {
+		return x2;
+	};
+	this.y2 = function() {
+		return y2;
+	};
+	this.w = function() {
+		return w;
+	};
+	this.h = function() {
+		return h;
+	};
+	this.p = function() {
+		return p;
+	};
+
+	this.overlap = function(a) {
+		if (p || a.p()) {
+			return x <= a.x2() && x2 >= a.x() && y <= a.y2() && y2 >= a.y();
+		}
+		return x < a.x2() && x2 > a.x() && y < a.y2() && y2 > a.y();
+	};
+
+	this.expand = function(a) {
+		var nx, ny;
+		var ax = a.x();
+		var ay = a.y();
+		var ax2 = a.x2();
+		var ay2 = a.y2();
+		if (x > ax) {
+			nx = ax;
+		}
+		else {
+			nx = x;
+		}
+		if (y > ay) {
+			ny = ay;
+		}
+		else {
+			ny = y;
+		}
+		if (x2 > ax2) {
+			w = x2 - nx;
+		}
+		else {
+			w = ax2 - nx;
+		}
+		if (y2 > ay2) {
+			h = y2 - ny;
+		}
+		else {
+			h = ay2 - ny;
+		}
+		x = nx;
+		y = ny;
+		return this;
+	};
+
+	//End of RTree.Rectangle
+}
+
+
+/* returns true if rectangle 1 overlaps rectangle 2
+ * [ boolean ] = overlapRectangle(rectangle a, rectangle b)
+ * @static function
+ */
+Rectangle.overlapRectangle = function(a, b) {
+	//if(!((a.h||a.w)&&(b.h||b.w))){ not faster resist the urge!
+	if ((a.h === 0 && a.w === 0) || (b.h === 0 && b.w === 0)) {
+		return a.x <= (b.x + b.w) && (a.x + a.w) >= b.x && a.y <= (b.y + b.h) && (a.y + a.h) >= b.y;
+	}
+	else {
+		return a.x < (b.x + b.w) && (a.x + a.w) > b.x && a.y < (b.y + b.h) && (a.y + a.h) > b.y;
+	}
+};
+
+/* returns true if rectangle a is contained in rectangle b
+ * [ boolean ] = containsRectangle(rectangle a, rectangle b)
+ * @static function
+ */
+Rectangle.containsRectangle = function(a, b) {
+	return (a.x + a.w) <= (b.x + b.w) && a.x >= b.x && (a.y + a.h) <= (b.y + b.h) && a.y >= b.y;
+};
+
+/* expands rectangle A to include rectangle B, rectangle B is untouched
+ * [ rectangle a ] = expandRectangle(rectangle a, rectangle b)
+ * @static function
+ */
+Rectangle.expandRectangle = function(a, b) {
+	var nx, ny;
+	var axw = a.x + a.w;
+	var bxw = b.x + b.w;
+	var ayh = a.y + a.h;
+	var byh = b.y + b.h;
+	if (a.x > b.x) {
+		nx = b.x;
+	}
+	else {
+		nx = a.x;
+	}
+	if (a.y > b.y) {
+		ny = b.y;
+	}
+	else {
+		ny = a.y;
+	}
+	if (axw > bxw) {
+		a.w = axw - nx;
+	}
+	else {
+		a.w = bxw - nx;
+	}
+	if (ayh > byh) {
+		a.h = ayh - ny;
+	}
+	else {
+		a.h = byh - ny;
+	}
+	a.x = nx;
+	a.y = ny;
+	return a;
+};
+
+/* generates a minimally bounding rectangle for all rectangles in
+ * array 'nodes'. If rect is set, it is modified into the MBR. Otherwise,
+ * a new rectangle is generated and returned.
+ * [ rectangle a ] = makeMBR(rectangle array nodes, rectangle rect)
+ * @static function
+ */
+Rectangle.makeMBR = function(nodes, rect) {
+	if (!nodes.length) {
+		return {
+			x: 0,
+			y: 0,
+			w: 0,
+			h: 0
+		};
+	}
+	rect = rect || {};
+	rect.x = nodes[0].x;
+	rect.y = nodes[0].y;
+	rect.w = nodes[0].w;
+	rect.h = nodes[0].h;
+
+	for (var i = 1, len = nodes.length; i < len; i++) {
+		Rectangle.expandRectangle(rect, nodes[i]);
+	}
+
+	return rect;
+};
+Rectangle.squarifiedRatio = function(l, w, fill) {
+	// Area of new enlarged rectangle
+	var lperi = (l + w) / 2.0; // Average size of a side of the new rectangle
+	var larea = l * w; // Area of new rectangle
+	// return the ratio of the perimeter to the area - the closer to 1 we are,
+	// the more 'square' a rectangle is. conversly, when approaching zero the
+	// more elongated a rectangle is
+	var lgeo = larea / (lperi * lperi);
+	return larea * fill / lgeo;
+};
+module.exports = Rectangle;
+},{}],4:[function(require,module,exports){
+'use strict';
+var rectangle = require('./rectangle');
 function RTree(width){
+	if(!(this instanceof RTree)){
+		return new RTree(width);
+	}
 	// Variables to control tree-dimensions
 	var minWidth = 3;  // Minimum width of any node before a merge
 	var maxWidth = 6;  // Maximum width of any node before a split
@@ -15,25 +433,11 @@ function RTree(width){
 	// Start with an empty root-tree
 	var rootTree = {x:0, y:0, w:0, h:0, id:'root', nodes:[] };
 	this.root = rootTree;
-	var isArray = function(o) {
-		return Array.isArray?Array.isArray(o):Object.prototype.toString.call(o) === '[object Array]';
-	};
 
 
 	// This is my special addition to the world of r-trees
 	// every other (simple) method I found produced crap trees
 	// this skews insertions to prefering squarer and emptier nodes
-	RTree.Rectangle.squarifiedRatio = function(l, w, fill) {
-		// Area of new enlarged rectangle
-		var lperi = (l + w) / 2.0; // Average size of a side of the new rectangle
-		var larea = l * w; // Area of new rectangle
-		// return the ratio of the perimeter to the area - the closer to 1 we are,
-		// the more 'square' a rectangle is. conversly, when approaching zero the
-		// more elongated a rectangle is
-		var lgeo = larea / (lperi*lperi);
-		return  larea * fill / lgeo;
-	};
-	
 	var flatten = function(tree){
 		var todo = tree.slice();
 		var done = [];
@@ -58,7 +462,7 @@ function RTree(width){
 		var retArray = [];
 		var currentDepth = 1;
 		var tree, i,ltree;
-		if(!rect || !RTree.Rectangle.overlapRectangle(rect, root)){
+		if(!rect || !rectangle.overlapRectangle(rect, root)){
 			return retArray;
 		}
 		var retObj = {x:rect.x, y:rect.y, w:rect.w, h:rect.h, target:obj};
@@ -71,8 +475,8 @@ function RTree(width){
 			if('target' in retObj) { // will this ever be false?
 				while(i >= 0){
 					ltree = tree.nodes[i];
-					if(RTree.Rectangle.overlapRectangle(retObj, ltree)) {
-						if( (retObj.target && 'leaf' in ltree && ltree.leaf === retObj.target) ||(!retObj.target && ('leaf' in ltree || RTree.Rectangle.containsRectangle(ltree, retObj)))) {
+					if(rectangle.overlapRectangle(retObj, ltree)) {
+						if( (retObj.target && 'leaf' in ltree && ltree.leaf === retObj.target) ||(!retObj.target && ('leaf' in ltree || rectangle.containsRectangle(ltree, retObj)))) {
 							// A Match !!
 						// Yup we found a match...
 						// we can cancel search and start walking up the list
@@ -82,7 +486,7 @@ function RTree(width){
 								retArray = tree.nodes.splice(i, 1);
 							}
 							// Resize MBR down...
-							RTree.Rectangle.makeMBR(tree.nodes, tree);
+							rectangle.makeMBR(tree.nodes, tree);
 							delete retObj.target;
 							//if(tree.nodes.length < minWidth) { // Underflow
 							//	retObj.nodes = searchSubtree(tree, true, [], tree);
@@ -103,7 +507,7 @@ function RTree(width){
 			
 				tree.nodes.splice(i+1, 1); // Remove unsplit node
 				if(tree.nodes.length > 0){
-					RTree.Rectangle.makeMBR(tree.nodes, tree);
+					rectangle.makeMBR(tree.nodes, tree);
 				}
 				for(var t = 0;t<retObj.nodes.length;t++){
 					insertSubtree(retObj.nodes[t], tree);
@@ -121,7 +525,7 @@ function RTree(width){
 					delete retObj.nodes; // Just start resizing
 				}
 			} else { // we are just resizing
-				RTree.Rectangle.makeMBR(tree.nodes, tree);
+				rectangle.makeMBR(tree.nodes, tree);
 			}
 			currentDepth -= 1;
 		}
@@ -157,14 +561,14 @@ function RTree(width){
 					break;
 				}
 				// Area of new enlarged rectangle
-				var oldLRatio = RTree.Rectangle.squarifiedRatio(ltree.w, ltree.h, ltree.nodes.length+1);
+				var oldLRatio = rectangle.squarifiedRatio(ltree.w, ltree.h, ltree.nodes.length+1);
 
 				// Enlarge rectangle to fit new rectangle
 				var nw = Math.max(ltree.x+ltree.w, rect.x+rect.w) - Math.min(ltree.x, rect.x);
 				var nh = Math.max(ltree.y+ltree.h, rect.y+rect.h) - Math.min(ltree.y, rect.y);
 			
 				// Area of new enlarged rectangle
-				var lratio = RTree.Rectangle.squarifiedRatio(nw, nh, ltree.nodes.length+2);
+				var lratio = rectangle.squarifiedRatio(nw, nh, ltree.nodes.length+2);
 				
 				if(bestChoiceIndex < 0 || Math.abs(lratio - oldLRatio) < bestChoiceArea) {
 					bestChoiceArea = Math.abs(lratio - oldLRatio); bestChoiceIndex = i;
@@ -193,8 +597,8 @@ function RTree(width){
 	 */
 	var pickNext = function(nodes, a, b) {
 	// Area of new enlarged rectangle
-		var areaA = RTree.Rectangle.squarifiedRatio(a.w, a.h, a.nodes.length+1);
-		var areaB = RTree.Rectangle.squarifiedRatio(b.w, b.h, b.nodes.length+1);
+		var areaA = rectangle.squarifiedRatio(a.w, a.h, a.nodes.length+1);
+		var areaB = rectangle.squarifiedRatio(b.w, b.h, b.nodes.length+1);
 		var highAreaDelta;
 		var highAreaNode;
 		var lowestGrowthGroup;
@@ -204,12 +608,12 @@ function RTree(width){
 			var newAreaA = {};
 			newAreaA.x = Math.min(a.x, l.x); newAreaA.y = Math.min(a.y, l.y);
 			newAreaA.w = Math.max(a.x+a.w, l.x+l.w) - newAreaA.x;	newAreaA.h = Math.max(a.y+a.h, l.y+l.h) - newAreaA.y;
-			var changeNewAreaA = Math.abs(RTree.Rectangle.squarifiedRatio(newAreaA.w, newAreaA.h, a.nodes.length+2) - areaA);
+			var changeNewAreaA = Math.abs(rectangle.squarifiedRatio(newAreaA.w, newAreaA.h, a.nodes.length+2) - areaA);
 	
 			var newAreaB = {};
 			newAreaB.x = Math.min(b.x, l.x); newAreaB.y = Math.min(b.y, l.y);
 			newAreaB.w = Math.max(b.x+b.w, l.x+l.w) - newAreaB.x;	newAreaB.h = Math.max(b.y+b.h, l.y+l.h) - newAreaB.y;
-			var changeNewAreaB = Math.abs(RTree.Rectangle.squarifiedRatio(newAreaB.w, newAreaB.h, b.nodes.length+2) - areaB);
+			var changeNewAreaB = Math.abs(rectangle.squarifiedRatio(newAreaB.w, newAreaB.h, b.nodes.length+2) - areaB);
 
 			if( !highAreaNode || !highAreaDelta || Math.abs( changeNewAreaB - changeNewAreaA ) < highAreaDelta ) {
 				highAreaNode = i;
@@ -220,14 +624,14 @@ function RTree(width){
 		var tempNode = nodes.splice(highAreaNode, 1)[0];
 		if(a.nodes.length + nodes.length + 1 <= minWidth)	{
 			a.nodes.push(tempNode);
-			RTree.Rectangle.expandRectangle(a, tempNode);
+			rectangle.expandRectangle(a, tempNode);
 		}	else if(b.nodes.length + nodes.length + 1 <= minWidth) {
 			b.nodes.push(tempNode);
-			RTree.Rectangle.expandRectangle(b, tempNode);
+			rectangle.expandRectangle(b, tempNode);
 		}
 		else {
 			lowestGrowthGroup.nodes.push(tempNode);
-			RTree.Rectangle.expandRectangle(lowestGrowthGroup, tempNode);
+			rectangle.expandRectangle(lowestGrowthGroup, tempNode);
 		}
 	};
 	
@@ -294,7 +698,7 @@ function RTree(width){
 	var searchSubtree = function(rect, returnNode, returnArray, root) {
 		var hitStack = []; // Contains the elements that overlap
 	
-		if(!RTree.Rectangle.overlapRectangle(rect, root)){
+		if(!rectangle.overlapRectangle(rect, root)){
 			return returnArray;
 		}
 	
@@ -306,7 +710,7 @@ function RTree(width){
 	
 			for(var i = nodes.length-1; i >= 0; i--) {
 				var ltree = nodes[i];
-				if(RTree.Rectangle.overlapRectangle(rect, ltree)) {
+				if(rectangle.overlapRectangle(rect, ltree)) {
 					if('nodes' in ltree) { // Not a Leaf
 						hitStack.push(ltree.nodes);
 					} else if('leaf' in ltree) { // A Leaf !!
@@ -361,15 +765,15 @@ function RTree(width){
 			}
 			
 			// If there is data attached to this retObj
-			if('leaf' in retObj || 'nodes' in retObj || isArray(retObj)) {
+			if('leaf' in retObj || 'nodes' in retObj || Array.isArray(retObj)) {
 				// Do Insert
-				if(isArray(retObj)) {
+				if(Array.isArray(retObj)) {
 					for(var ai = 0; ai < retObj.length; ai++) {
-						RTree.Rectangle.expandRectangle(bc, retObj[ai]);
+						rectangle.expandRectangle(bc, retObj[ai]);
 					}
 					bc.nodes = bc.nodes.concat(retObj);
 					} else {
-					RTree.Rectangle.expandRectangle(bc, retObj);
+					rectangle.expandRectangle(bc, retObj);
 					bc.nodes.push(retObj); // Do Insert
 				}
 	
@@ -391,7 +795,7 @@ function RTree(width){
 				}
 			} else { // Otherwise Do Resize
 				//Just keep applying the new bounding rectangle to the parents..
-				RTree.Rectangle.expandRectangle(bc, retObj);
+				rectangle.expandRectangle(bc, retObj);
 				retObj = {x:bc.x,y:bc.y,w:bc.w,h:bc.h};
 			}
 		}
@@ -463,17 +867,8 @@ function RTree(width){
 		var retArray = insertSubtree({x:rect.x,y:rect.y,w:rect.w,h:rect.h,leaf:obj}, rootTree);
 		return retArray;
 	};
-	
-
-
-	
-//End of RTree
-
-
-
-
-
-this.toJSON = function(printing) {
+}
+RTree.prototype.toJSON = function(printing) {
 	return JSON.stringify(this.root, false, printing);
 };
 
@@ -483,437 +878,11 @@ RTree.fromJSON = function(json) {
 	return rt;
 };
 
-}
-RTree.isArray = function(o) {
-	return Array.isArray?Array.isArray(o):Object.prototype.toString.call(o) === '[object Array]';
-};
-var rTree = function(width){
-		return new RTree(width);
-};
-rTree.isArray = RTree.isArray;
-if (typeof module !== 'undefined' && module.exports) {
-	module.exports = rTree;
-}else if(typeof document === 'undefined'){
-	self.rTree = rTree;
-	self.RTree = RTree;
-}else{
-	window.rTree = rTree;
-	window.RTree = RTree;
-}
-})(this);
-RTree.Rectangle = function(x, y, w, h) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
-	'use strict';
-	var x2, y2, p;
-
-	if(x.x) {
-		w = x.w;
-		h = x.h;
-		y = x.y;
-		if(x.w !== 0 && !x.w && x.x2){
-			w = x.x2-x.x;
-			h = x.y2-x.y;
-		} else {
-			w = x.w;
-			h = x.h;
-		}
-		x = x.x;
-		// For extra fastitude
-		x2 = x + w;
-		y2 = y + h;
-		p = (h+w)?false:true;
-	} else {
-		// For extra fastitude
-		x2 = x + w;
-		y2 = y + h;
-		p = (h+w)?false:true;
-	}
-
-	this.x1 = this.x = function(){return x;};
-	this.y1 = this.y = function(){return y;};
-	this.x2 = function(){return x2;};
-	this.y2 = function(){return y2;};
-	this.w = function(){return w;};
-	this.h = function(){return h;};
-	this.p = function(){return p;};
-	
-	this.overlap = function(a) {
-		if(p||a.p()){
-			return x <= a.x2() && x2 >= a.x() && y <= a.y2() && y2 >= a.y();
-		}
-		return x < a.x2() && x2 > a.x() && y < a.y2() && y2 > a.y();
-	};
-	
-	this.expand = function(a) {
-		var nx,ny;
-		var ax = a.x();
-		var ay = a.y();
-		var ax2 = a.x2();
-		var ay2 = a.y2();
-		if(x>ax) {
-			nx = ax;
-		} else {
-			nx = x;
-		}
-		if(y>ay) {
-			ny = ay;
-		} else {
-			ny = y;
-		}
-		if(x2>ax2){
-			w = x2 - nx;
-		} else {
-			w = ax2 - nx;
-		}
-		if(y2>ay2){
-			h = y2 - ny;
-		} else {
-			h = ay2 - ny;
-		}
-		x = nx;
-		y = ny;
-		return this;
-	};
-	
-//End of RTree.Rectangle
-};
+module.exports = RTree;
 
 
-/* returns true if rectangle 1 overlaps rectangle 2
- * [ boolean ] = overlapRectangle(rectangle a, rectangle b)
- * @static function
- */
-RTree.Rectangle.overlapRectangle = function(a, b) {
-	'use strict';
-	//if(!((a.h||a.w)&&(b.h||b.w))){ not faster resist the urge!
-	if((a.h===0&&a.w===0)||(b.h===0&&b.w===0)){
-		return a.x <= (b.x+b.w) && (a.x+a.w) >= b.x && a.y <= (b.y+b.h) && (a.y+a.h) >= b.y;
-	}else{
-		return a.x < (b.x+b.w) && (a.x+a.w) > b.x && a.y < (b.y+b.h) && (a.y+a.h) > b.y;
-	}
-};
 
-/* returns true if rectangle a is contained in rectangle b
- * [ boolean ] = containsRectangle(rectangle a, rectangle b)
- * @static function
- */
-RTree.Rectangle.containsRectangle = function(a, b) {
-	'use strict';
-	return (a.x+a.w) <= (b.x+b.w) && a.x >= b.x && (a.y+a.h) <= (b.y+b.h) && a.y >= b.y;
-};
-
-/* expands rectangle A to include rectangle B, rectangle B is untouched
- * [ rectangle a ] = expandRectangle(rectangle a, rectangle b)
- * @static function
- */
-RTree.Rectangle.expandRectangle = function(a, b) {
-	'use strict';
-	var nx,ny;
-	var axw = a.x+a.w;
-	var bxw = b.x+b.w;
-	var ayh = a.y+a.h;
-	var byh = b.y+b.h;
-	if(a.x > b.x) {
-		nx=b.x;
-	} else {
-		nx=a.x;
-	}
-	if(a.y > b.y) {
-		ny=b.y;
-	} else {
-		ny=a.y;
-	}
-	if(axw > bxw) {
-		a.w = axw-nx;
-	} else {
-			a.w = bxw-nx;
-	}
-	if(ayh > byh) {
-		a.h = ayh -ny;
-	} else {
-		a.h = byh - ny;
-	}
-	a.x = nx;
-	a.y = ny;
-	return a;
-};
-
-/* generates a minimally bounding rectangle for all rectangles in
- * array 'nodes'. If rect is set, it is modified into the MBR. Otherwise,
- * a new rectangle is generated and returned.
- * [ rectangle a ] = makeMBR(rectangle array nodes, rectangle rect)
- * @static function
- */
-RTree.Rectangle.makeMBR = function(nodes, rect) {
-	'use strict';
-	if(!nodes.length){
-		return {
-			x : 0,
-			y : 0,
-			w : 0,
-			h : 0
-		};
-	}
-	rect = rect || {};
-	rect.x = nodes[0].x;
-	rect.y = nodes[0].y;
-	rect.w = nodes[0].w;
-	rect.h = nodes[0].h;
-		
-	for(var i = 1,len = nodes.length; i<len; i++){
-		RTree.Rectangle.expandRectangle(rect, nodes[i]);
-	}
-		
-	return rect;
-};
-(function(self) {
-	'use strict';
-	var bbox = function(ar, obj) {
-		if (obj && obj.bbox) {
-			return {
-				leaf: obj,
-				x: obj.bbox[0],
-				y: obj.bbox[1],
-				w: obj.bbox[2] - obj.bbox[0],
-				h: obj.bbox[3] - obj.bbox[1]
-			};
-		}
-		var len = ar.length;
-		var i = 0;
-		var a = new Array(len);
-		while (i < len) {
-			a[i] = [ar[i][0], ar[i][1]];
-			i++;
-		}
-		var first = a[0];
-		len = a.length;
-		i = 1;
-		var temp = {
-			min: [].concat(first),
-			max: [].concat(first)
-		};
-		while (i < len) {
-			if (a[i][0] < temp.min[0]) {
-				temp.min[0] = a[i][0];
-			}
-			else if (a[i][0] > temp.max[0]) {
-				temp.max[0] = a[i][0];
-			}
-			if (a[i][1] < temp.min[1]) {
-				temp.min[1] = a[i][1];
-			}
-			else if (a[i][1] > temp.max[1]) {
-				temp.max[1] = a[i][1];
-			}
-			i++;
-		}
-		var out = {
-			x: temp.min[0],
-			y: temp.min[1],
-			w: (temp.max[0] - temp.min[0]),
-			h: (temp.max[1] - temp.min[1])
-		};
-		if (obj) {
-			out.leaf = obj;
-		}
-		return out;
-	};
-	var geoJSON = {};
-	geoJSON.point = function(obj,self) {
-		return (self.insertSubtree({
-			x: obj.geometry.coordinates[0],
-			y: obj.geometry.coordinates[1],
-			w: 0,
-			h: 0,
-			leaf: obj
-		}, self.root));
-	};
-	geoJSON.multiPointLineString = function(obj,self) {
-		return (self.insertSubtree(bbox(obj.geometry.coordinates, obj), self.root));
-	};
-	geoJSON.multiLineStringPolygon = function(obj,self) {
-		return (self.insertSubtree(bbox(Array.prototype.concat.apply([], obj.geometry.coordinates), obj), self.root));
-	};
-	geoJSON.multiPolygon = function(obj,self) {
-		return (self.insertSubtree(bbox(Array.prototype.concat.apply([], Array.prototype.concat.apply([], obj.geometry.coordinates)), obj), self.root));
-	};
-	geoJSON.makeRec = function(obj) {
-		return new RTree.Rectangle(obj.x, obj.y, obj.w, obj.h);
-	};
-	geoJSON.geometryCollection = function(obj,self) {
-		if (obj.bbox) {
-			return (self.insertSubtree({
-				leaf: obj,
-				x: obj.bbox[0],
-				y: obj.bbox[1],
-				w: obj.bbox[2] - obj.bbox[0],
-				h: obj.bbox[3] - obj.bbox[1]
-			}, self.root));
-		}
-		var geos = obj.geometry.geometries;
-		var i = 0;
-		var len = geos.length;
-		var temp = [];
-		var g;
-		while (i < len) {
-			g = geos[i];
-			switch (g.type) {
-			case 'Point':
-				temp.push(geoJSON.makeRec({
-					x: g.coordinates[0],
-					y: g.coordinates[1],
-					w: 0,
-					h: 0
-				}));
-				break;
-			case 'MultiPoint':
-				temp.push(geoJSON.makeRec(bbox(g.coordinates)));
-				break;
-			case 'LineString':
-				temp.push(geoJSON.makeRec(bbox(g.coordinates)));
-				break;
-			case 'MultiLineString':
-				temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([], g.coordinates))));
-				break;
-			case 'Polygon':
-				temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([], g.coordinates))));
-				break;
-			case 'MultiPolygon':
-				temp.push(geoJSON.makeRec(bbox(Array.prototype.concat.apply([], Array.prototype.concat.apply([], g.coordinates)))));
-				break;
-			case 'GeometryCollection':
-				geos = geos.concat(g.geometries);
-				len = geos.length;
-				break;
-			}
-			i++;
-		}
-		var first = temp[0];
-		i = 1;
-		len = temp.length;
-		while (i < len) {
-			first.expand(temp[i]);
-			i++;
-		}
-		return self.insertSubtree({
-			leaf: obj,
-			x: first.x(),
-			y: first.y(),
-			h: first.h(),
-			w: first.w()
-		}, self.root);
-	};
-	self.geoJSON = function(prelim, callback) {
-		var that = this;
-		callback = callback || function() {
-			return true;
-		};
-		var features, feature;
-		if (RTree.isArray(prelim)) {
-			features = prelim.slice();
-		}
-		else if (prelim.features && RTree.isArray(prelim.features)) {
-			features = prelim.features.slice();
-		}
-		else {
-			throw ('this isn\'t what we\'re looking for');
-		}
-		var len = features.length;
-		var i = 0;
-		while (i < len) {
-			feature = features[i];
-			if (feature.type === 'Feature') {
-				switch (feature.geometry.type) {
-				case 'Point':
-					geoJSON.point(feature,that);
-					break;
-				case 'MultiPoint':
-					geoJSON.multiPointLineString(feature,that);
-					break;
-				case 'LineString':
-					geoJSON.multiPointLineString(feature,that);
-					break;
-				case 'MultiLineString':
-					geoJSON.multiLineStringPolygon(feature,that);
-					break;
-				case 'Polygon':
-					geoJSON.multiLineStringPolygon(feature,that);
-					break;
-				case 'MultiPolygon':
-					geoJSON.multiPolygon(feature, that);
-					break;
-				case 'GeometryCollection':
-					geoJSON.geometryCollection(feature, that);
-					break;
-				}
-			}
-			i++;
-		}
-		return callback(null, true);
-	};
-	self.bbox = function() {
-		var x1, y1, x2, y2, callback;
-		switch (arguments.length) {
-		case 0:
-			throw ('not enough arguments');
-		case 1:
-			x1 = arguments[0][0][0];
-			y1 = arguments[0][0][1];
-			x2 = arguments[0][1][0];
-			y2 = arguments[0][1][1];
-			break;
-		case 2:
-			if (typeof arguments[1] === 'function') {
-				x1 = arguments[0][0][0];
-				y1 = arguments[0][0][1];
-				x2 = arguments[0][1][0];
-				y2 = arguments[0][1][1];
-				callback = arguments[1];
-				break;
-			}
-			else {
-				x1 = arguments[0][0];
-				y1 = arguments[0][1];
-				x2 = arguments[1][0];
-				y2 = arguments[1][1];
-				break;
-			}
-			break;
-		case 3:
-			x1 = arguments[0][0];
-			y1 = arguments[0][1];
-			x2 = arguments[1][0];
-			y2 = arguments[1][1];
-			callback = arguments[2];
-			break;
-		case 4:
-			x1 = arguments[0];
-			y1 = arguments[1];
-			x2 = arguments[2];
-			y2 = arguments[3];
-			break;
-		case 5:
-			x1 = arguments[0];
-			y1 = arguments[1];
-			x2 = arguments[2];
-			y2 = arguments[3];
-			callback = arguments[4];
-			break;
-		}
-		if (!callback) {
-			return this.search({
-				x: x1,
-				y: y1,
-				w: x2 - x1,
-				h: y2 - y1
-			});
-		}
-		else {
-			this.search({
-				x: x1,
-				y: y1,
-				w: x2 - x1,
-				h: y2 - y1
-			}, callback);
-		}
-	};
-})(RTree.prototype);
+},{"./rectangle":3}]},{},[2])
+(2)
+});
+;
