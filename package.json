@@ -1,6 +1,6 @@
 {
   "name": "rtree",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "rtree library for javascript",
   "keywords": [
     "rtree"
@@ -14,7 +14,7 @@
   },
   "dependencies": {},
   "license": "MIT",
-  "main": "./dist/rtree.js",
+  "main": "./lib/rtree.js",
   "directories": {
     "example": "examples",
     "test": "test"
