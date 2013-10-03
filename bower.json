@@ -1,6 +1,6 @@
 {
   "name": "rtree",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "homepage": "https://github.com/leaflet-extras/RTree",
   "authors": [
     "Calvin Metcalf <calvin.metcalf@state.ma.us>"
