@@ -7,7 +7,12 @@
         <meta name="description" content="Demo of rTree.js with leaflet">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <script src="http://leaflet-extras.github.com/leaflet.css/dist/leaflet.css.bundle.min.js"></script>
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+<!--[if lte IE 8]>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.ie.css" />
+<![endif]-->
+
+<script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
   <style type="text/css">
  html, body {
         margin: 0;
@@ -90,7 +95,7 @@
         <script type="text/javascript" src="libs/bootstrap/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="libs/leaflet.ajax.min.js"></script>
         <script type="text/javascript" src="libs/mustache.js"></script>
-        <script type="text/javascript" src="../src/rtree.js"></script>
+        <script type="text/javascript" src="../dist/rtree.js"></script>
         <script type="text/javascript" src="map.js"></script>
     </body>
 </html>

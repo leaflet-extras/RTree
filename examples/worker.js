@@ -1,29 +1,30 @@
 var m = L.map('map').setView([42.34100473739444, -71.09639167785643], 14);
 var mq=L.tileLayer("http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpeg", {attribution:'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains:'1234'}).addTo(m);
 var bikes = L.geoJson(undefined,{style:style,onEachFeature:onEachFeature}).addTo(m);
-var rf = function(data,cb){
+
+var rt = cw(function(data,cb){
+	var self = this;
 	var request,_resp;
-	importScripts("../src/rtree.js");
-	if(!_db.rt){
-		_db.rt=rTree();
+	importScripts("../dist/rtree.js");
+	if(!self.rt){
+		self.rt=RTree();
 		request = new XMLHttpRequest();
 		request.open("GET", data);
 		request.onreadystatechange = function() {
 			if (request.readyState === 4 && request.status === 200) {
 				_resp=JSON.parse(request.responseText);
-				_db.rt.geoJSON(_resp);
+				self.rt.geoJSON(_resp);
 				cb(true);
 			}
 		};
 		request.send();
 	}else{
-		return _db.rt.bbox(data);
+		return self.rt.bbox(data);
 	}
-}
-var rt = communist(rf);
+});
 var bd;
 
-rt.data(communist.makeUrl("libs/bikes.json")).then(function(d){
+rt.data(cw.makeUrl("libs/bikes.json")).then(function(d){
 	showAll();
 });
 
@@ -131,7 +132,8 @@ rt.data(e.boxSelectBounds).then(function(d){bikes.clearLayers();bikes.addData(d)
 function showAll(){
 
 	var bounds = m.getBounds();
-	rt.data([[bounds.getSouthWest().lng,bounds.getSouthWest().lat],[bounds.getNorthEast().lng,bounds.getNorthEast().lat]]).then(function(d){
+	var thing = [[bounds.getSouthWest().lng,bounds.getSouthWest().lat],[bounds.getNorthEast().lng,bounds.getNorthEast().lat]];
+	rt.data(thing).then(function(d){
 			bikes.clearLayers();
 		bikes.addData(d);
 	});

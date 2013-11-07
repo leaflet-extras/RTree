@@ -1,7 +1,7 @@
 var m = L.map('map').setView([42.34100473739444, -71.09639167785643], 14);
 var mq=L.tileLayer("http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpeg", {attribution:'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains:'1234'}).addTo(m);
 var bikes = L.geoJson(undefined,{style:style,onEachFeature:onEachFeature}).addTo(m);
-var rt = rTree();
+var rt = RTree();
 var bd;
 L.Util.ajax("libs/bikes.json",function(data){
 	rt.geoJSON(data,function(err,success){
