@@ -1,6 +1,6 @@
 {
   "name": "rtree",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "rtree library for javascript",
   "keywords": [
     "rtree"
