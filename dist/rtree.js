@@ -1,5 +1,4 @@
-!function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.RTree=e():"undefined"!=typeof global?global.RTree=e():"undefined"!=typeof self&&(self.RTree=e())}(function(){var define,module,exports;
-return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+!function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.RTree=e():"undefined"!=typeof global?global.RTree=e():"undefined"!=typeof self&&(self.RTree=e())}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 var rectangle = require('./rectangle');
 var bbox = function(ar, obj) {
@@ -881,6 +880,16 @@ RTree.fromJSON = function(json) {
 module.exports = RTree;
 
 
+/**
+ * Polyfill for the Array.isArray function
+ * todo: Test on IE7 and IE8
+ * Taken from https://github.com/geraintluff/tv4/issues/20
+ */
+if(typeof Array.isArray !== 'function'){
+    Array.isArray = function (a) {
+        return typeof a === 'object' && {}.toString.call(a) === '[object Array]';
+    };
+}
 
 },{"./rectangle":3}]},{},[2])
 (2)
