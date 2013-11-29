@@ -1,4 +1,5 @@
-!function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.RTree=e():"undefined"!=typeof global?global.RTree=e():"undefined"!=typeof self&&(self.RTree=e())}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+!function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.RTree=e():"undefined"!=typeof global?global.RTree=e():"undefined"!=typeof self&&(self.RTree=e())}(function(){var define,module,exports;
+return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 var rectangle = require('./rectangle');
 var bbox = function(ar, obj) {
@@ -145,7 +146,10 @@ exports.geoJSON = function(prelim) {
 	else if (prelim.features && Array.isArray(prelim.features)) {
 		features = prelim.features.slice();
 	}
-	else {
+	else if (prelim instanceof Object) {
+            features = [prelim];
+        }
+	else{
 		throw ('this isn\'t what we\'re looking for');
 	}
 	var len = features.length;
@@ -210,6 +214,7 @@ exports.bbox = function() {
 		h: y2 - y1
 	});
 };
+
 },{"./rectangle":3}],2:[function(require,module,exports){
 'use strict';
 var RTree = require('./rtree');
