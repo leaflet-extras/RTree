@@ -1,6 +1,6 @@
-!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.RTree=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
-var rectangle = _dereq_('./rectangle');
+var rectangle = require('./rectangle');
 var bbox = function (ar, obj) {
   if (obj && obj.bbox) {
     return {
@@ -213,15 +213,15 @@ exports.bbox = function () {
   });
 };
 
-},{"./rectangle":3}],2:[function(_dereq_,module,exports){
+},{"./rectangle":3}],2:[function(require,module,exports){
 'use strict';
-var RTree = _dereq_('./rtree');
-var geojson = _dereq_('./geojson');
+var RTree = require('./rtree');
+var geojson = require('./geojson');
 RTree.prototype.bbox = geojson.bbox;
 RTree.prototype.geoJSON = geojson.geoJSON;
-RTree.Rectangle = _dereq_('./rectangle');
+RTree.Rectangle = require('./rectangle');
 module.exports = RTree;
-},{"./geojson":1,"./rectangle":3,"./rtree":4}],3:[function(_dereq_,module,exports){
+},{"./geojson":1,"./rectangle":3,"./rtree":4}],3:[function(require,module,exports){
 'use strict';
 function Rectangle(x, y, w, h) { // new Rectangle(bounds) or new Rectangle(x, y, w, h)
   if (!(this instanceof Rectangle)) {
@@ -421,9 +421,9 @@ Rectangle.squarifiedRatio = function (l, w, fill) {
   return larea * fill / lgeo;
 };
 module.exports = Rectangle;
-},{}],4:[function(_dereq_,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
-var rectangle = _dereq_('./rectangle');
+var rectangle = require('./rectangle');
 function RTree(width) {
   if (!(this instanceof RTree)) {
     return new RTree(width);
@@ -907,5 +907,3 @@ if (typeof Array.isArray !== 'function') {
 }
 
 },{"./rectangle":3}]},{},[2])
-(2)
-});

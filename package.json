@@ -12,28 +12,29 @@
   "bugs": {
     "url": "https://github.com/leaflet-extras/RTree/issues"
   },
-  "dependencies": {},
+  "dependencies": {
+    "grunt": "^0.4.4"
+  },
   "license": "MIT",
-  "main": "./lib/rtree.js",
+  "main": "./lib/index.js",
   "directories": {
     "example": "examples",
     "test": "test"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "npm run build && jshint lib && mocha -R nyan test/*.test.js",
+    "build": "npm run build-js && npm run min",
+    "build-js": "browserify . > dist/rtree.js",
+    "min": "uglifyjs ./dist/rtree.js > dist/rtree.min.js"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/leaflet-extras/RTree.git"
   },
   "devDependencies": {
-    "grunt-cli": "~0.1.9",
-    "grunt": "~0.4.1",
-    "grunt-contrib-uglify": "~0.2.2",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-jshint": "~0.6.0",
-    "grunt-mocha-test": "~0.7.0",
-    "chai": "~1.8.0",
-    "grunt-browserify": "~1.2.8"
+    "uglify-js": "^2.4.13",
+    "browserify": "^3.41.0",
+    "chai": "^1.9.1",
+    "mocha": "^1.18.2"
   }
 }
