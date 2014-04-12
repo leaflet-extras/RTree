@@ -19,7 +19,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run build && jshint lib && mocha -R nyan test/*.test.js",
+    "test": "npm run build && jshint lib && mocha -R spec test/*.test.js",
     "build": "npm run build-js && npm run min",
     "build-js": "browserify . > dist/rtree.js",
     "min": "uglifyjs ./dist/rtree.js > dist/rtree.min.js"
