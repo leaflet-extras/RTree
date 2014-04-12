@@ -12,9 +12,6 @@
   "bugs": {
     "url": "https://github.com/leaflet-extras/RTree/issues"
   },
-  "dependencies": {
-    "grunt": "^0.4.4"
-  },
   "license": "MIT",
   "main": "./lib/index.js",
   "directories": {
@@ -32,9 +29,10 @@
     "url": "git://github.com/leaflet-extras/RTree.git"
   },
   "devDependencies": {
-    "uglify-js": "^2.4.13",
     "browserify": "^3.41.0",
     "chai": "^1.9.1",
-    "mocha": "^1.18.2"
+    "jshint": "^2.5.0",
+    "mocha": "^1.18.2",
+    "uglify-js": "^2.4.13"
   }
 }
