@@ -19,7 +19,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run build && jshint lib && mocha -R spec test/*.test.js",
+    "test": "npm run build && jshint lib && tape spec test/*.test.js | tspec",
     "build": "npm run build-js && npm run min",
     "build-js": "browserify . > dist/rtree.js",
     "min": "uglifyjs ./dist/rtree.js > dist/rtree.min.js"
@@ -30,9 +30,9 @@
   },
   "devDependencies": {
     "browserify": "^3.41.0",
-    "chai": "^1.9.1",
     "jshint": "^2.5.0",
-    "mocha": "^1.18.2",
+    "tap-spec": "^0.1.8",
+    "tape": "^2.12.3",
     "uglify-js": "^2.4.13"
   }
 }
