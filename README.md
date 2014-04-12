@@ -1,4 +1,4 @@
-#rTree
+#rTree [![Build Status](https://travis-ci.org/leaflet-extras/RTree.svg?branch=master)](https://travis-ci.org/leaflet-extras/RTree)
 
 A non-recursive R-Tree library in pure JavaScript with no dependencies.  Fork of [Jon-Carlos Rivera's fantastic library](https://github.com/imbcmdth/RTree) which sadly seems not to be maintained. MIT Licensed. 
 
