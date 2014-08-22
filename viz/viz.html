@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- based on https://github.com/mourner/rbush/blob/master/viz/viz-uniform.html -->
+<title>RTree Tree Visualization</title>
+<canvas id="canvas" width="701" height="701"></canvas>
+<br>
+
+<script src="../dist/rtree.js"></script>
+<script src="viz.js"></script>
+<script>
+
+var N = 5000;
+
+function genData(N) {
+    var data = [];
+    for (var i = 0; i < N; i++) {
+        data[i] = randBox(1);
+    }
+    return data;
+}
+
+var tree = RTree();
+var data = [];
+
+// be nice to use a bulk insert here
+genInsertOneByOne(N)();
+
+function genInsertOneByOne(K) {
+    return function () {
+        var data2 = genData(K);
+
+        console.time('insert ' + K + ' items');
+        for (var i = 0; i < K; i++) {
+            tree.insert(data2[i]);
+        }
+        console.timeEnd('insert ' + K + ' items');
+
+        data = data.concat(data2);
+
+        draw();
+    };
+}
+
+document.getElementById('canvas').onclick = search;
+
+</script>
