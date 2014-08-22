@@ -21,7 +21,7 @@
   "scripts": {
     "test": "npm run build && jshint lib && tape spec test/*.test.js | tspec",
     "build": "npm run build-js && npm run min",
-    "build-js": "browserify . > dist/rtree.js",
+    "build-js": "browserify . -s RTree > dist/rtree.js",
     "min": "uglifyjs ./dist/rtree.js > dist/rtree.min.js"
   },
   "repository": {
