@@ -334,6 +334,7 @@ Rectangle.overlapRectangle = function (a, b) {
            ((a.x + a.w) - b.x > -eps) &&
            (a.y - (b.y + b.h) < eps) &&
            ((a.y + a.h) - b.y > -eps);
+  }
   else {
     return a.x < (b.x + b.w) && (a.x + a.w) > b.x && a.y < (b.y + b.h) && (a.y + a.h) > b.y;
   }
