@@ -24,6 +24,7 @@ test('RTree Searching', function(t) {
     i--;
   }
   t.equals(len, 0, '1k Out-of-Bounds Searches');
+
   i = 1000;
   len = 0;
   while (i > 0) {
